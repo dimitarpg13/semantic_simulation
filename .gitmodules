@@ -1,0 +1,3 @@
+[submodule "semsimula-paper"]
+	path = semsimula-paper
+	url = https://github.com/dimitarpg13/semsimula-paper.git
