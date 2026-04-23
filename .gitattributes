@@ -1,1 +1,2 @@
 literature/articles/semsimula_paper.pdf filter=lfs diff=lfs merge=lfs -text
+literature/books/Raum_Zeit_Materie_Weyl_1919.pdf filter=lfs diff=lfs merge=lfs -text
