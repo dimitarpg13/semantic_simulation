@@ -4,3 +4,4 @@ literature/books/Space-Time-Matter_Hermann_Weyl_1950.pdf filter=lfs diff=lfs mer
 literature/articles/weyl_electron_and_gravitation_part_I_1929.pdf filter=lfs diff=lfs merge=lfs -text
 literature/articles/Semantic_Tube_Prediction_Beating_LLM_Data_Efficiency_with_JEPA_Huang_2026.pdf filter=lfs diff=lfs merge=lfs -text
 literature/articles/Understanding_and_Improving_Transformer_From_a_Multi-Particle_Dynamic_System_Point_of_View_Lu_2019.pdf filter=lfs diff=lfs merge=lfs -text
+literature/books/V_I_Arnold_Mathematical_Methods_of_Classical_Mechanics-Springer_1989.pdf filter=lfs diff=lfs merge=lfs -text
