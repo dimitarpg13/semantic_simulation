@@ -4,6 +4,8 @@
 
 [Space, Time, Matter, Hermann Weyl, (First American Print), 1950](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/books/Space-Time-Matter_Hermann_Weyl_1950.pdf)
 
+[Ordinary Differential Equations, V.I. Arnold, The MIT Press, 1998 (original year 1973)](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/books/V_I_Arnold_Ordinary_Differential_Equations_1998.pdf)
+
 [Mathematical Methods of Classical Mechanics, V.I. Arnold, Springer, 1989](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/books/V_I_Arnold_Mathematical_Methods_of_Classical_Mechanics-Springer_1989.pdf)
 
 [Nonlinear Dynamics and Chaos, Steven H. Strogatz, 2018](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/books/Nonlinear_Dynamics_and_Chaos_2018_Steven_H._Strogatz.pdf)
