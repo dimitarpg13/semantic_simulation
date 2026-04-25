@@ -6,6 +6,8 @@
 
 [Mathematical Methods of Classical Mechanics, V.I. Arnold, Springer, 1989](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/books/V_I_Arnold_Mathematical_Methods_of_Classical_Mechanics-Springer_1989.pdf)
 
+[Nonlinear Dynamics and Chaos, Steven H. Strogatz, 2018](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/books/Nonlinear_Dynamics_and_Chaos_2018_Steven_H._Strogatz.pdf)
+
 ## papers
 
 [Semantic Simulation: A Prescriptive Lagrangian Framework for Efficient Semantic Inference, D. Gueorguiev, 2026](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/articles/semsimula_paper.pdf)
