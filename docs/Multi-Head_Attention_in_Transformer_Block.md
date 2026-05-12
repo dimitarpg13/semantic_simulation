@@ -127,7 +127,12 @@ scores = (q @ k.transpose(-2, -1)) / math.sqrt(d_k)   # (B, h, T, T)
 
 For causal models (GPT-2, decoder blocks in Vaswani), add a mask $M \in \mathbb{R}^{T \times T}$ where
 
-$$M_{t,t'} = \begin{cases} 0 & \text{if } t' \leq t \quad \text{(present or past — allowed)} \\ -\infty & \text{if } t' > t \quad \text{(future — forbidden)} \end{cases}$$
+$$
+M_{t,t'} = \begin{cases}
+0 & \text{if } t' \leq t \quad \text{(present or past -- allowed)} \\\\
+-\infty & \text{if } t' \gt t \quad \text{(future -- forbidden)}
+\end{cases}
+$$
 
 so that
 
@@ -139,7 +144,15 @@ For **encoder blocks** (BERT, the encoder half of Vaswani) there is no mask — 
 
 Concretely, $M$ is upper-triangular with $-\infty$ above the main diagonal and $0$ on and below it:
 
-$$M = \begin{pmatrix} 0 & -\infty & -\infty & \cdots & -\infty \\ 0 & 0 & -\infty & \cdots & -\infty \\ 0 & 0 & 0 & \cdots & -\infty \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & 0 & \cdots & 0 \end{pmatrix}$$
+$$
+M = \begin{pmatrix}
+0 & -\infty & -\infty & \cdots & -\infty \\\\
+0 & 0 & -\infty & \cdots & -\infty \\\\
+0 & 0 & 0 & \cdots & -\infty \\\\
+\vdots & \vdots & \vdots & \ddots & \vdots \\\\
+0 & 0 & 0 & \cdots & 0
+\end{pmatrix}
+$$
 
 The mask is added **before** the softmax, not after. The resulting masked softmax is
 
@@ -171,15 +184,36 @@ PyTorch's standard `masked_fill(mask, float('-inf'))` works correctly for the ca
 
 Suppose the raw scores for a single head are
 
-$$S = \begin{pmatrix} 2.0 & 1.5 & 0.3 & 0.8 \\ 1.0 & 2.5 & 1.8 & 0.4 \\ 0.5 & 1.2 & 3.0 & 1.1 \\ 0.7 & 0.9 & 1.4 & 2.2 \end{pmatrix}$$
+$$
+S = \begin{pmatrix}
+2.0 & 1.5 & 0.3 & 0.8 \\\\
+1.0 & 2.5 & 1.8 & 0.4 \\\\
+0.5 & 1.2 & 3.0 & 1.1 \\\\
+0.7 & 0.9 & 1.4 & 2.2
+\end{pmatrix}
+$$
 
 After adding $M$:
 
-$$S' = S + M = \begin{pmatrix} 2.0 & -\infty & -\infty & -\infty \\ 1.0 & 2.5 & -\infty & -\infty \\ 0.5 & 1.2 & 3.0 & -\infty \\ 0.7 & 0.9 & 1.4 & 2.2 \end{pmatrix}$$
+$$
+S' = S + M = \begin{pmatrix}
+2.0 & -\infty & -\infty & -\infty \\\\
+1.0 & 2.5 & -\infty & -\infty \\\\
+0.5 & 1.2 & 3.0 & -\infty \\\\
+0.7 & 0.9 & 1.4 & 2.2
+\end{pmatrix}
+$$
 
 After row-wise softmax:
 
-$$A = \begin{pmatrix} 1.000 & 0.000 & 0.000 & 0.000 \\ 0.182 & 0.818 & 0.000 & 0.000 \\ 0.057 & 0.115 & 0.828 & 0.000 \\ 0.106 & 0.130 & 0.214 & 0.550 \end{pmatrix}$$
+$$
+A = \begin{pmatrix}
+1.000 & 0.000 & 0.000 & 0.000 \\\\
+0.182 & 0.818 & 0.000 & 0.000 \\\\
+0.057 & 0.115 & 0.828 & 0.000 \\\\
+0.106 & 0.130 & 0.214 & 0.550
+\end{pmatrix}
+$$
 
 Observations:
 
