@@ -332,13 +332,13 @@ The hidden states do not cluster by phrase across layers. This would mean:
 
 This document connects to and is informed by:
 
-- **[6] Hidden States, Semantic Tube Geodesics, and Semantic Structures** (`docs/Hidden_States_Semantic_Tube_Geodesics_and_Semantic_Structures.md`): The initial comparison of hidden state trajectories with semantic structure dynamics. Contains the original (imprecise) mapping that this document refines.
+- **[6] Hidden States, Semantic Tube Geodesics, and Semantic Structures** (`Hidden_States_Semantic_Tube_Geodesics_and_Semantic_Structures.md`): The initial comparison of hidden state trajectories with semantic structure dynamics. Contains the original (imprecise) mapping that this document refines.
 
-- **[7] Equivalence between the Evolution of Hidden States and Semantic Structures** (`docs/Equivalence_between_the_Evolution_of_Hidden_States_and_Semantic_Structures.md`): Maps the governing equations (ODE/SDE from Huang et al. vs. Euler-Lagrange from Semantic Simulation). Should be updated to reflect the corrected granularity.
+- **[7] Equivalence between the Evolution of Hidden States and Semantic Structures** (`Equivalence_between_the_Evolution_of_Hidden_States_and_Semantic_Structures.md`): Maps the governing equations (ODE/SDE from Huang et al. vs. Euler-Lagrange from Semantic Simulation). Should be updated to reflect the corrected granularity.
 
-- **[8] On the Interpretation of Semantic Mass** (`docs/On_the_Interpretation_of_Semantic_Mass.md`): Identifies semantic mass with aggregate attention received. The mass interpretation is used in Experiments 4 and 5 of this document.
+- **[8] On the Interpretation of Semantic Mass** (`On_the_Interpretation_of_Semantic_Mass.md`): Identifies semantic mass with aggregate attention received. The mass interpretation is used in Experiments 4 and 5 of this document.
 
-- **[9] STP Loss as an Emergent Property of the Energy Landscape** (`docs/STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md`): Contains the Gaussian well conjecture and the experimental results ($R^2 \approx 0$) that motivate the per-phrase fitting proposed here.
+- **[9] STP Loss as an Emergent Property of the Energy Landscape** (`STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md`): Contains the Gaussian well conjecture and the experimental results ($R^2 \approx 0$) that motivate the per-phrase fitting proposed here.
 
 ---
 
@@ -354,12 +354,12 @@ This document connects to and is informed by:
 
 [5] D. Gueorguiev, "On the Signature Matrix of Semantic Property," 2022.
 
-[6] "Hidden States, Semantic Tube Geodesics, and Semantic Structures," 2026 (`docs/Hidden_States_Semantic_Tube_Geodesics_and_Semantic_Structures.md`).
+[6] "Hidden States, Semantic Tube Geodesics, and Semantic Structures," 2026 (`Hidden_States_Semantic_Tube_Geodesics_and_Semantic_Structures.md`).
 
-[7] "Equivalence between the Evolution of Hidden States and Semantic Structures," 2026 (`docs/Equivalence_between_the_Evolution_of_Hidden_States_and_Semantic_Structures.md`).
+[7] "Equivalence between the Evolution of Hidden States and Semantic Structures," 2026 (`Equivalence_between_the_Evolution_of_Hidden_States_and_Semantic_Structures.md`).
 
-[8] "On the Interpretation of Semantic Mass in Terms of Transformer Mechanisms," 2026 (`docs/On_the_Interpretation_of_Semantic_Mass.md`).
+[8] "On the Interpretation of Semantic Mass in Terms of Transformer Mechanisms," 2026 (`On_the_Interpretation_of_Semantic_Mass.md`).
 
-[9] "STP Loss as an Emergent Property of the Energy Landscape Defined by a Gaussian Well Potential," 2026 (`docs/STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md`).
+[9] "STP Loss as an Emergent Property of the Energy Landscape Defined by a Gaussian Well Potential," 2026 (`STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md`).
 
 [10] H. Huang, Y. LeCun, R. Balestriero, "Semantic Tube Prediction: Beating LLM Data Efficiency with JEPA," arXiv:2602.22617, 2026.

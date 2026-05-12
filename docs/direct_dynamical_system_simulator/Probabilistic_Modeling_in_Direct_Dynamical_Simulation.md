@@ -5,12 +5,12 @@
 **Scope:** Thermodynamic, information-theoretic, and linguistic arguments for stochasticity; connection to the readout mechanism, RL calibration, and the v0-v3 programme
 
 Companion to:
-- `docs/Semantic_Simulator_EOM.md` — v0 Equations of Motion
-- `docs/Semantic_Simulator_RL_Calibration_Programme.md` — RL calibration programme
-- `docs/Note_on_Langevin_Dynamics.md` — mathematical background on Langevin SDEs
-- `docs/Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md` — integrator design
-- `docs/Advancing_The_Dynamic_Simulation_Model.md` — v0 through v3 staging
-- `docs/Modified_BAOAB_with_STP_identity_Detailed_Analysis.md` — STP-BAOAB analysis
+- `Semantic_Simulator_EOM.md` — v0 Equations of Motion
+- `Semantic_Simulator_RL_Calibration_Programme.md` — RL calibration programme
+- `Note_on_Langevin_Dynamics.md` — mathematical background on Langevin SDEs
+- `Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md` — integrator design
+- `Advancing_The_Dynamic_Simulation_Model.md` — v0 through v3 staging
+- `Modified_BAOAB_with_STP_identity_Detailed_Analysis.md` — STP-BAOAB analysis
 
 Last updated: 11 May 2026.
 
@@ -430,8 +430,8 @@ The deterministic limit ($\sigma \to 0$) remains available as a special case for
 - Villani, C. (2009). *Hypocoercivity*. Memoirs of the AMS.
 - Song, Y., Ermon, S. (2019). *Generative modeling by estimating gradients of the data distribution*. NeurIPS.
 - Ho, J., Jain, A., Abbeel, P. (2020). *Denoising diffusion probabilistic models*. NeurIPS.
-- Gueorguiev, D. P. (2026). *Semantic Simulator EOM* (`docs/Semantic_Simulator_EOM.md`).
-- Gueorguiev, D. P. (2026). *Note on Langevin Dynamics* (`docs/Note_on_Langevin_Dynamics.md`).
-- Gueorguiev, D. P. (2026). *Advancing the Dynamic Simulation Model* (`docs/Advancing_The_Dynamic_Simulation_Model.md`).
-- Gueorguiev, D. P. (2026). *Semantic Simulator with RL-calibrated Force Fields* (`docs/Semantic_Simulator_RL_Calibration_Programme.md`).
-- Gueorguiev, D. P. (2026). *Efficient Numerical Algorithms on CUDA-Enabled GPUs* (`docs/Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md`).
+- Gueorguiev, D. P. (2026). *Semantic Simulator EOM* (`Semantic_Simulator_EOM.md`).
+- Gueorguiev, D. P. (2026). *Note on Langevin Dynamics* (`Note_on_Langevin_Dynamics.md`).
+- Gueorguiev, D. P. (2026). *Advancing the Dynamic Simulation Model* (`Advancing_The_Dynamic_Simulation_Model.md`).
+- Gueorguiev, D. P. (2026). *Semantic Simulator with RL-calibrated Force Fields* (`Semantic_Simulator_RL_Calibration_Programme.md`).
+- Gueorguiev, D. P. (2026). *Efficient Numerical Algorithms on CUDA-Enabled GPUs* (`Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md`).

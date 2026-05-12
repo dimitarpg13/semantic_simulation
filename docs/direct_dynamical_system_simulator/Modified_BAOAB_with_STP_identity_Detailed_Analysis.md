@@ -5,11 +5,11 @@
 **Scope:** Component-by-component analysis, EOM coupling, RL calibration integration, theoretical properties, trade-offs, and implementation strategy
 
 Companion to:
-- `docs/Semantic_Simulator_EOM.md` — v0 Equations of Motion
-- `docs/Semantic_Simulator_RL_Calibration_Programme.md` — RL calibration programme memo
-- `docs/Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md` — integrator design report
-- `docs/Expressivity_Bounds_For_v0_Simulator.md` — v0 expressivity ceiling
-- `docs/Advancing_The_Dynamic_Simulation_Model.md` — v0 through v3 staging
+- `Semantic_Simulator_EOM.md` — v0 Equations of Motion
+- `Semantic_Simulator_RL_Calibration_Programme.md` — RL calibration programme memo
+- `Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md` — integrator design report
+- `Expressivity_Bounds_For_v0_Simulator.md` — v0 expressivity ceiling
+- `Advancing_The_Dynamic_Simulation_Model.md` — v0 through v3 staging
 
 Last updated: 11 May 2026.
 
@@ -619,7 +619,7 @@ The STP-BAOAB integrator can **directly consume** these trained potentials as fo
 
 ### 11.2 Architecture: the `HarvestedPotential` adapter
 
-The trained `ScalarPotential` from `notebooks/conservative_arch/model.py` has the signature:
+The trained `ScalarPotential` (from the PARFLM implementation) has the signature:
 
 ```python
 class ScalarPotential(nn.Module):
@@ -826,8 +826,8 @@ The modification is incremental, not disruptive: the existing codebase gains a `
 - Leimkuhler, B., Matthews, C. (2013). *Rational construction of stochastic numerical methods for molecular sampling*. AMRX.
 - Leimkuhler, B., Matthews, C. (2015). *Molecular Dynamics with Deterministic and Stochastic Numerical Methods*. Springer.
 - Huang, LeCun, Balestriero. *Semantic Tensor Product*. arXiv:2602.22617.
-- Gueorguiev, D. P. (2026a). *Semantic Simulator EOM* (`docs/Semantic_Simulator_EOM.md`).
-- Gueorguiev, D. P. (2026b). *Semantic Simulator with RL-calibrated Force Fields: a programme memo* (`docs/Semantic_Simulator_RL_Calibration_Programme.md`).
-- Gueorguiev, D. P. (2026c). *Efficient Numerical Algorithms on CUDA-Enabled GPUs for Dynamical-System–Based Semantic Simulation* (`docs/Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md`).
-- Gueorguiev, D. P. (2026d). *Expressivity Bounds for the v0 Simulator* (`docs/Expressivity_Bounds_For_v0_Simulator.md`).
-- Gueorguiev, D. P. (2026e). *Advancing the Dynamic Simulation Model* (`docs/Advancing_The_Dynamic_Simulation_Model.md`).
+- Gueorguiev, D. P. (2026a). *Semantic Simulator EOM* (`Semantic_Simulator_EOM.md`).
+- Gueorguiev, D. P. (2026b). *Semantic Simulator with RL-calibrated Force Fields: a programme memo* (`Semantic_Simulator_RL_Calibration_Programme.md`).
+- Gueorguiev, D. P. (2026c). *Efficient Numerical Algorithms on CUDA-Enabled GPUs for Dynamical-System–Based Semantic Simulation* (`Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md`).
+- Gueorguiev, D. P. (2026d). *Expressivity Bounds for the v0 Simulator* (`Expressivity_Bounds_For_v0_Simulator.md`).
+- Gueorguiev, D. P. (2026e). *Advancing the Dynamic Simulation Model* (`Advancing_The_Dynamic_Simulation_Model.md`).
