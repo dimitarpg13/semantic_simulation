@@ -123,23 +123,96 @@ Without the $1/\sqrt{d_k}$ factor, the variance of the pre-softmax scores grows 
 scores = (q @ k.transpose(-2, -1)) / math.sqrt(d_k)   # (B, h, T, T)
 ```
 
-### 3.3 Causal masking (decoder / autoregressive only)
+### 3.3 Causal masking (decoder / autoregressive only) — deep dive
 
 For causal models (GPT-2, decoder blocks in Vaswani), add a mask $M \in \mathbb{R}^{T \times T}$ where
 
-$$M_{t,t'} = \begin{cases} 0 & \text{if } t' \leq t \\ -\infty & \text{if } t' > t \end{cases}$$
+$$M_{t,t'} = \begin{cases} 0 & \text{if } t' \leq t \quad \text{(present or past — allowed)} \\ -\infty & \text{if } t' > t \quad \text{(future — forbidden)} \end{cases}$$
 
 so that
 
-$$S^{(i)} \leftarrow S^{(i)} + M$$
+$$S'^{(i)} = S^{(i)} + M$$
 
-The $-\infty$ entries become exactly zero after softmax, enforcing that token $t$ cannot peek at positions $t' > t$. For **encoder blocks** (BERT, the encoder half of Vaswani) there is no mask — every position attends to every position.
+For **encoder blocks** (BERT, the encoder half of Vaswani) there is no mask — every position attends to every position.
+
+#### How the mask is applied
+
+Concretely, $M$ is upper-triangular with $-\infty$ above the main diagonal and $0$ on and below it:
+
+$$M = \begin{pmatrix} 0 & -\infty & -\infty & \cdots & -\infty \\ 0 & 0 & -\infty & \cdots & -\infty \\ 0 & 0 & 0 & \cdots & -\infty \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & 0 & \cdots & 0 \end{pmatrix}$$
+
+The mask is added **before** the softmax, not after. The resulting masked softmax is
+
+$$A^{(i)}_{t,t'} = \frac{\exp\big(S^{(i)}_{t,t'} + M_{t,t'}\big)}{\sum_{u=1}^{T} \exp\big(S^{(i)}_{t,u} + M_{t,u}\big)}$$
+
+#### Why $-\infty$ before softmax (and not 0 after softmax)
+
+The key identity is
+
+$$\exp\big(S^{(i)}_{t,t'} + (-\infty)\big) = \exp(-\infty) = 0$$
+
+So for any forbidden $(t, t')$ pair, the *numerator* in the softmax is exactly zero, and that entry contributes nothing to the *denominator* either. The allowed entries are then renormalized cleanly — they sum to 1 over only the past-and-present positions.
+
+If you instead applied the mask **after** the softmax — zeroing out the forbidden entries post-hoc — two things would go wrong:
+
+1. **The row would no longer sum to 1**, forcing a manual renormalization step.
+2. **The gradients would leak information about future tokens during training**, because the masked entries would still have non-zero gradients through the unmasked softmax. The pre-softmax additive mask gets the math right in a single step.
+
+#### Numerical detail: implementations use a large finite negative number
+
+In production code the "$-\infty$" is realized as a large finite negative value (typically $-10^9$, or `float('-inf')` via masked-fill) for two reasons:
+
+- `exp(-inf) = 0` is well-defined in IEEE 754, but `inf - inf = nan`, which can arise in rare edge cases (e.g., an entire row masked out due to padding combined with causal masking).
+- A value like $-10^4$ is already enough: $\exp(-10^4)$ underflows to zero in float32 anyway.
+
+PyTorch's standard `masked_fill(mask, float('-inf'))` works correctly for the canonical causal case because every row has at least one allowed entry (the diagonal), so the denominator is never zero. The `-1e9` convention is a defensive choice that survives pathological cases.
+
+#### Worked example, $T = 4$
+
+Suppose the raw scores for a single head are
+
+$$S = \begin{pmatrix} 2.0 & 1.5 & 0.3 & 0.8 \\ 1.0 & 2.5 & 1.8 & 0.4 \\ 0.5 & 1.2 & 3.0 & 1.1 \\ 0.7 & 0.9 & 1.4 & 2.2 \end{pmatrix}$$
+
+After adding $M$:
+
+$$S' = S + M = \begin{pmatrix} 2.0 & -\infty & -\infty & -\infty \\ 1.0 & 2.5 & -\infty & -\infty \\ 0.5 & 1.2 & 3.0 & -\infty \\ 0.7 & 0.9 & 1.4 & 2.2 \end{pmatrix}$$
+
+After row-wise softmax:
+
+$$A = \begin{pmatrix} 1.000 & 0.000 & 0.000 & 0.000 \\ 0.182 & 0.818 & 0.000 & 0.000 \\ 0.057 & 0.115 & 0.828 & 0.000 \\ 0.106 & 0.130 & 0.214 & 0.550 \end{pmatrix}$$
+
+Observations:
+
+- **Row 1** (token 1) attends only to itself — the only allowed position. $A_{1,1} = 1$ regardless of the original score values.
+- **Row 2** (token 2) attends to tokens 1 and 2, with weights depending only on $S_{2,1}$ and $S_{2,2}$.
+- **Each row sums to exactly 1**, normalized over only the allowed (past-and-present) positions.
+- **The lower-triangular structure** of $A$ is the visible signature of the causal constraint.
+
+#### PyTorch implementation
 
 ```python
-if causal:
-    mask = torch.triu(torch.ones(T, T, dtype=torch.bool), diagonal=1)
-    scores = scores.masked_fill(mask, float('-inf'))
+# Build the causal mask once (T × T boolean, True = forbidden)
+mask = torch.triu(
+    torch.ones(T, T, dtype=torch.bool, device=x.device),
+    diagonal=1,
+)
+# diagonal=1 → strictly above the main diagonal is True;
+# the diagonal itself is False because token t IS allowed to attend to itself.
+
+# Apply to scores; broadcasts across (B, h)
+scores = scores.masked_fill(mask, float('-inf'))
+
+# Row-wise softmax now produces the lower-triangular attention pattern
+attn = F.softmax(scores, dim=-1)
 ```
+
+In efficient implementations (Flash Attention, xformers, PyTorch's `F.scaled_dot_product_attention(..., is_causal=True)`), the mask is **never materialized** as a $T \times T$ tensor. The kernel simply skips the upper-triangular work entirely, saving both memory ($O(T^2)$ for the mask) and roughly halving the attention FLOPs. Materializing the mask is fine for small $T$ but becomes a real bottleneck at long context lengths.
+
+#### Architectural significance
+
+The causal mask is what makes a transformer **autoregressive at the level of the loss**: during training, the model sees the entire sequence in one forward pass, but the mask guarantees that the prediction for token $t+1$ depends only on tokens $1, \dots, t$. This is the source of the *training parallelism* that makes transformers efficient — every position's loss is computed simultaneously, but each position's computation respects the autoregressive ordering.
+
+At inference time, the mask is what makes **KV-caching** work: once the keys and values for tokens $1, \dots, t$ have been computed, they are frozen — no future token can affect them — so they can be cached, and only token $t+1$ requires fresh work. Without the mask, every token's representation would depend on every other token's, and incremental decoding would be impossible.
 
 ### 3.4 Row-wise softmax — the attention pattern
 
