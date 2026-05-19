@@ -14,11 +14,7 @@
 
 [Semantic Simulation: A Prescriptive Lagrangian Framework for Efficient Semantic Inference, D. Gueorguiev, 2026](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/articles/semsimula_paper.pdf)
 
-related github repos: 
-
-  * https://github.com/dimitarpg13/semantic_simulation
-
-  * https://github.com/dimitarpg13/semsimula-paper
+related github repo: https://github.com/dimitarpg13/semsimula-paper
 
 [Semantic Tube Prediction: Beating LLM Data Efficiency with JEPA, Hai Huang, Yann LeCun, Randall Balestriero, 2026](https://github.com/dimitarpg13/semantic_simulation/blob/main/literature/articles/Semantic_Tube_Prediction_Beating_LLM_Data_Efficiency_with_JEPA_Huang_2026.pdf)
 
