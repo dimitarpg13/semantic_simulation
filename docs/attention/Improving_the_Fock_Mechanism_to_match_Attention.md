@@ -21,6 +21,7 @@
 11. [Why This Could Improve Perplexity](#11-why-this-could-improve-perplexity)
 12. [Proposed Experiments](#12-proposed-experiments)
 13. [Theoretical Significance](#13-theoretical-significance)
+14. [The Entropy Collapse Problem: Learnable Creation Temperature](#14-the-entropy-collapse-problem-learnable-creation-temperature)
 
 ---
 
@@ -156,16 +157,22 @@ $$e^- \xrightarrow{\text{emit}} \gamma_\text{virtual} \xrightarrow{\text{propaga
 
 The Feynman vertex factor at the source (emission), the propagator (what is carried), and the vertex factor at the receiver (absorption) are **three separate objects** — exactly the Q/K/V decoupling.
 
-```mermaid
-graph LR
-    subgraph "QED Interaction"
-        A["e- (source j)"] -->|"emit gamma, vertex: k_j = W_K h_j"| P["virtual photon gamma<br>payload: v_j = W_V h_j"]
-        P -->|"absorb gamma, vertex: alpha_ij ~ exp(q_i k_j)"| B["e- (receiver i)<br>delta_h_i += alpha_ij v_j"]
-    end
-    subgraph "Attention"
-        C["Token j"] -->|"create virtual particle, key: k_j = W_K h_j"| Q["semantic photon<br>value: v_j = W_V h_j"]
-        Q -->|"annihilate at i, coupling: softmax(q_i k_j / sqrt d)"| D["Token i<br>y_i = sum_j alpha_ij v_j"]
-    end
+```
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │                          QED Interaction                               │
+    │                                                                       │
+    │   e⁻ (source j) ──emit γ──▶ virtual photon γ ──absorb γ──▶ e⁻ (i)   │
+    │                   vertex:     payload:          vertex:      Δhᵢ +=   │
+    │                   kⱼ = Wₖhⱼ  vⱼ = Wᵥhⱼ        αᵢⱼ·vⱼ     αᵢⱼ·vⱼ  │
+    └─────────────────────────────────────────────────────────────────────────┘
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │                       Attention (same structure)                       │
+    │                                                                       │
+    │   Token j ─────create────▶ semantic photon ──annihilate──▶ Token i    │
+    │               key: kⱼ      value: vⱼ = Wᵥhⱼ  coupling:    yᵢ =     │
+    │               = Wₖhⱼ      (virtual particle)  softmax      Σⱼαᵢⱼvⱼ │
+    │                                                (qᵢ·kⱼ/√d)           │
+    └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 5.2 Correspondence Table
@@ -285,19 +292,22 @@ is conditioned on the **mean of all tokens** — a single undifferentiated globa
 | Q/K/V decoupling | Gate determines both whether to create AND what content register holds | Coupling and content are fused |
 | Competitive normalization | $M$ sigmoid gates are independent | No budget constraint; creation of register $k$ does not affect register $k'$ |
 
-```mermaid
-graph TD
-    subgraph "Current FockPARFLM - Structural Gaps"
-        A["mean(h_1..T)<br>(symmetric, global)"] --> G["MLP sigmoid gates<br>(independent, no budget)"]
-        G -->|"activate register j"| R["r_j starts from<br>learnable embedding<br>(not from input content)"]
-        R -->|"participates in V_phi<br>(symmetric pair force)"| D["PARF dynamics"]
-    end
-    subgraph "What Attention Does"
-        B["q_i = W_Q h_i<br>(asymmetric: per-token query)"] --> S["softmax(q_i k_j / sqrt d)<br>(competitive budget)"]
-        K["k_j = W_K h_j<br>(per-token key)"] --> S
-        S -->|"weighted sum"| V["v_j = W_V h_j<br>(decoupled content)"]
-        V --> U["delta_h_i = sum_j alpha_ij v_j"]
-    end
+```
+ Current FockPARFLM — Structural Gaps        What Attention Does
+ ─────────────────────────────────────        ────────────────────────────────────
+                                              qᵢ = Wqhᵢ ─┐
+    mean(h₁..T) ──▶ MLP sigmoid gates        (per-token   │
+    (symmetric,      (independent,             query)      ├──▶ softmax(qᵢ·kⱼ/√d)
+     global)          no budget)                           │    (competitive budget)
+         │                                    kⱼ = Wₖhⱼ ─┘           │
+         ▼                                    (per-token key)         ▼
+    activate register j                                      vⱼ = Wᵥhⱼ
+    rⱼ starts from learnable embedding                       (decoupled content)
+    (NOT from input content)                                         │
+         │                                                           ▼
+         ▼                                               Δhᵢ = Σⱼ αᵢⱼ vⱼ
+    participates in Vφ
+    (symmetric pair force)
 ```
 
 The current FockPARFLM therefore uses creation/destruction to implement **auxiliary persistent memory** — registers are additional hidden states that persist across layers. This is computationally useful (it escapes the v0 ceiling via Dyck₂) but it does not implement **directed information exchange** — the mechanism that drives attention's language-modelling power.
@@ -308,17 +318,25 @@ The current FockPARFLM therefore uses creation/destruction to implement **auxili
 
 The current FockPARFLM creates and destroys **input particles** (register slots as additional hidden states). The QFT analysis in Section 5 identifies that attention creates and destroys **virtual mediating particles** — semantic photons $\gamma$ that carry information from source $j$ to receiver $i$.
 
-```mermaid
-graph LR
-    subgraph "Current: Creates Input Particles"
-        V1["Vacuum state"] -->|"creation gate, mean-conditioned"| R1["Register r_k<br>(real particle, persistent)"]
-        R1 -->|"V_phi pair force, symmetric"| R1
-        R1 -->|"destruction gate"| V2["Vacuum state"]
-    end
-    subgraph "Proposed: Creates Virtual Exchange Particles"
-        J["Token j"] -->|"emit semantic photon<br>a_dagger(k_j) vac<br>payload: v_j = W_V h_j"| G["virtual gamma<br>(lifetime ~1/(1-lambda) layers)"]
-        G -->|"absorbed by token i<br>coupling: softmax(q_i k_j)<br>annihilate at i"| I["Token i<br>delta_h_i += alpha_ij v_j"]
-    end
+```
+ Current: Creates Input Particles
+ ─────────────────────────────────────────────────────────────────────
+   Vacuum ──creation gate──▶ Register rₖ ◀──Vφ pair force──▶ rₖ
+   state    (mean-cond.)     (real particle,    (symmetric)
+                              persistent)
+                                  │
+                          destruction gate
+                                  │
+                                  ▼
+                             Vacuum state
+
+ Proposed: Creates Virtual Exchange Particles
+ ─────────────────────────────────────────────────────────────────────
+   Token j ──emit semantic──▶ virtual γ ──absorb at i──▶ Token i
+              photon           (lifetime                  Δhᵢ +=
+              a†(kⱼ)|0⟩       ≈ 1/(1-λ)                  αᵢⱼ·vⱼ
+              payload:          layers)    coupling:
+              vⱼ = Wᵥhⱼ                   softmax(qᵢ·kⱼ)
 ```
 
 | | Current FockPARFLM | Proposed FockPARFLM v2 |
@@ -426,61 +444,48 @@ class FockPARFLM_v2(SparsePARFLM):
 
 ### 9.5 Full Forward Pass
 
-```mermaid
-flowchart TD
-    A["Input tokens h_1..T"]
-    WK["W_K projection: k_j  T x d_k"]
-    WV["W_V projection: v_j  T x d"]
-    RK["r_k current state"]
-    WQ["W_Q^k: q_k  d_k"]
-    DOT["q_k dot k_j / sqrt d_k  T scores"]
-    SM["softmax over j: alpha_kj  T weights sum=1"]
-    WS["sum_j alpha_kj v_j: new r_k"]
-    MX["max_j alpha_kj: salience signal"]
-    SAL["s_k = s_k times lambda + signal times (1-lambda)"]
-    ACT{"s_k above threshold"}
-    ACTIVE["Register k active<br>(participates in PARF)"]
-    INACTIVE["Register k inactive"]
-    PARF["PARF dynamics<br>V_theta + V_phi + non-conservative Q_i + damped Verlet"]
-    DG["Destruction gate<br>g_destroy = sigmoid(MLP(r_k))"]
-    DSAL["s_k = s_k times (1 - g_destroy)"]
-    OUT["Updated h_1..T to LM head"]
-    NEXT["Updated r_k to next layer l+1"]
-
-    A --> WK
-    A --> WV
-
-    subgraph QKV [Per-register k: Q/K/V Creation Event]
-        RK
-        WQ
-        DOT
-        SM
-        WS
-        MX
-    end
-
-    RK --> WQ
-    WQ --> DOT
-    WK --> DOT
-    DOT --> SM
-    SM --> WS
-    WV --> WS
-    SM --> MX
-
-    MX --> SAL
-    SAL --> ACT
-    ACT -->|"Yes: created"| ACTIVE
-    ACT -->|"No: vacuum"| INACTIVE
-
-    A --> PARF
-    ACTIVE --> PARF
-
-    PARF --> DG
-    DG --> DSAL
-
-    PARF --> OUT
-    DSAL --> NEXT
-    WS --> NEXT
+```
+                          Input tokens h₁..T
+                          ┌───────┴───────┐
+                          ▼               ▼
+                    Wₖ: kⱼ (T×d_k)   Wᵥ: vⱼ (T×d)
+                          │               │
+    ┌─────────────────────┼───────────────┼──────────────────────────┐
+    │ Per-register k:     │               │  Q/K/V Creation Event   │
+    │                     │               │                          │
+    │  rₖ current ──▶ W_Q^k ──▶ qₖ       │                          │
+    │  state              │               │                          │
+    │                     ▼               │                          │
+    │              qₖ · kⱼ / √d_k        │                          │
+    │              (T scores)             │                          │
+    │                     │               │                          │
+    │                     ▼               │                          │
+    │              softmax over j ────────┤                          │
+    │              αₖⱼ (Σⱼ=1)            │                          │
+    │              ┌──────┴──────┐        │                          │
+    │              ▼             ▼        ▼                          │
+    │        max_j(αₖⱼ)    Σⱼ αₖⱼ · vⱼ = new rₖ                   │
+    │        (salience)                                              │
+    └─────────┼────────────────────────────┼─────────────────────────┘
+              ▼                            │
+    σₖ = σₖ·λ + signal·(1-λ)              │
+              │                            │
+              ▼                            │
+        σₖ > threshold?                    │
+         ╱          ╲                      │
+       Yes           No                    │
+        │         (inactive)               │
+        ▼                                  │
+    Register k active ──────┐              │
+                            ▼              │
+    h₁..T ──────────▶ PARF dynamics        │
+                       Vθ + Vφ + Qᵢ       │
+                       + damped Verlet     │
+                       ┌──────┴──────┐     │
+                       ▼             ▼     ▼
+                  h₁..T (out)    Destruction gate ──▶ rₖ (next layer)
+                  → LM head      g = σ(MLP(rₖ))
+                                 σₖ ← σₖ·(1-g)
 ```
 
 ---
@@ -552,19 +557,21 @@ The proposed mechanism has one structural advantage over standard attention: cro
 
 ## 12. Proposed Experiments
 
-```mermaid
-gantt
-    title FockPARFLM v2 Experimental Programme
-    dateFormat  YYYY-MM-DD
-    section Phase 1 - Dyck_2 Falsifier
-    F2-qkv-creation (d=64, M=16)         :active, f1, 2026-05-22, 7d
-    F2-scale-up (d=128, M=32, 8k steps)  :f2, after f1, 7d
-    3-seed consistency check              :f3, after f2, 5d
-    section Phase 2 - TinyStories
-    P11-qkv (M=16, P10f scale)           :p1, after f3, 10d
-    P11-qkv-32 (M=32, 16k steps)        :p2, after p1, 10d
-    section Phase 3 - Cross-serial
-    a^n b^n c^n falsifier (v3 required)  :p3, after p2, 14d
+```
+FockPARFLM v2 Experimental Programme
+═══════════════════════════════════════════════════════════════════════════
+
+Phase 1 — Dyck₂ Falsifier
+  F2-qkv-creation (d=64, M=16)        ████████  May 22 – May 29
+  F2-scale-up (d=128, M=32, 8k steps)          ████████  May 29 – Jun 5
+  3-seed consistency check                               █████  Jun 5 – Jun 10
+
+Phase 2 — TinyStories
+  P11-qkv (M=16, P10f scale)                                  ██████████  Jun 10 – Jun 20
+  P11-qkv-32 (M=32, 16k steps)                                           ██████████  Jun 20 – Jun 30
+
+Phase 3 — Cross-serial
+  aⁿbⁿcⁿ falsifier (v3 required)                                                    ██████████████  Jun 30 – Jul 14
 ```
 
 ### 12.1 F2-qkv-creation: Dyck₂ Falsifier with Q/K/V Creation
@@ -629,18 +636,50 @@ where $\hat{\phi}(x) = \sum_j v_j \delta(x - k_j)$ is the semantic photon field 
 
 ### 13.3 The Expressivity Hierarchy
 
-```mermaid
-graph TD
-    V0["v0: SPLM<br>Conservative dynamics<br>Regular languages (finite automaton)"]
-    V0 -->|"+ V_phi pair force"| PARF["PARFLM<br>Still v0 (Theorem v0-ceiling)<br>PPL ceiling: 26.4 on TinyStories"]
-    V0 -->|"+ mean-conditioned registers"| FOCK1["FockPARFLM v1<br>v0 + v2 partial<br>Dyck_2: +1.3pp (modest)"]
-    FOCK1 -->|"+ Q/K/V creation (this report)"| FOCK2["FockPARFLM v2<br>v0 + v2 full<br>CF class (predicted)<br>PPL: TBD"]
-    FOCK2 -->|"+ Lie group operator actions"| MCS["v0 + v2 + v3<br>Full MCS (LCFRS)<br>= Attention expressivity class"]
-
-    style PARF fill:#ffcccc,stroke:#cc0000
-    style FOCK1 fill:#ffffcc,stroke:#aaaa00
-    style FOCK2 fill:#ccffcc,stroke:#00aa00
-    style MCS fill:#ccccff,stroke:#0000aa
+```
+                    ┌───────────────────────────────────┐
+                    │  v0: SPLM                         │
+                    │  Conservative dynamics             │
+                    │  Regular languages (finite aut.)   │
+                    └──────────┬──────────┬──────────────┘
+                               │          │
+                  + Vφ pair    │          │  + mean-conditioned
+                    force      │          │    registers
+                               ▼          │
+                    ┌──────────────────┐   │
+                    │  PARFLM          │   │
+                    │  Still v0        │   │
+                    │  PPL ceiling:    │   │
+                    │  26.4 TinyStories│   │
+                    └──────────────────┘   │
+                                          ▼
+                              ┌───────────────────────┐
+                              │  FockPARFLM v1        │
+                              │  v0 + v2 partial      │
+                              │  Dyck₂: +1.3pp        │
+                              └───────────┬───────────┘
+                                          │
+                               + Q/K/V creation
+                               (this report)
+                                          │
+                                          ▼
+                              ┌───────────────────────┐
+                              │  FockPARFLM v2        │
+                              │  v0 + v2 full         │
+                              │  CF class (predicted) │
+                              │  PPL: TBD             │
+                              └───────────┬───────────┘
+                                          │
+                              + Lie group operator
+                                actions
+                                          │
+                                          ▼
+                              ┌───────────────────────┐
+                              │  v0 + v2 + v3         │
+                              │  Full MCS (LCFRS)     │
+                              │  = Attention           │
+                              │    expressivity class  │
+                              └───────────────────────┘
 ```
 
 ### 13.4 The Separator Remains Diagnostic
@@ -654,6 +693,179 @@ From Paper v4, §9.4.3, the full mildly context-sensitive class requires a third
 $$\text{MCS} = \underbrace{\text{v0}}_{\text{conservative dynamics}} + \underbrace{\text{v2}}_{\text{Fock creation/destruction}} + \underbrace{\text{v3}}_{\text{Lie group operator actions on register groups}}$$
 
 The v3 mechanism maps to **non-abelian gauge theory**: register groups transform under learned group actions rather than scalar gates. This is the next major theoretical development, planned for Paper v5.
+
+---
+
+## 14. The Entropy Collapse Problem: Learnable Creation Temperature
+
+### 14.1 Empirical Diagnosis: Uniform Attention in the Creation Gate
+
+The D1–D5 TinyStories debug experiment (d=256, L=8, M=16, T=256, 2000 steps on A100) revealed a critical problem: the Q/K/V creation gate's attention is **near-uniform at every layer**. The normalised entropy (0 = peaked/useful, 1 = uniform/wasted) measured at inference after training:
+
+| Layer | D1 (M=16) | D3 (d_k=128) |
+|---|---|---|
+| 0 | 1.000 | 1.000 |
+| 1 | 0.996 | 0.937 |
+| 2 | 0.997 | 0.951 |
+| 3 | 0.995 | 0.985 |
+| 4–7 | 0.995–0.997 | 0.993–0.995 |
+
+At normalised entropy 0.996, the **effective number of attended tokens** is $n_\text{eff} = \exp(H) \approx 254$ out of $T = 256$ — the register is attending to essentially all tokens equally. The register content $r_k = \sum_j \alpha_{kj} v_j$ degenerates into $r_k \approx \frac{1}{T} \sum_j v_j$, which is identical to the mean-conditioned gate from FockPARFLM v1. Despite implementing the full Q/K/V protocol, the mechanism collapses back to mean-pooling.
+
+Yet even this degraded form produces a genuine PPL lift: D1 (52.6 PPL) beats D5 baseline (61.0 PPL) by $-8.4$ PPL ($-13.8\%$). The Q/K/V structure helps — but the attention cannot focus.
+
+### 14.2 Why the Standard $1/\sqrt{d_k}$ Scaling Fails for Register Queries
+
+The temperature $1/\sqrt{d_k}$ was introduced by Vaswani et al. (2017) to prevent softmax saturation. The derivation assumes that query and key entries are independent with zero mean and unit variance, so that the dot product $q \cdot k = \sum_{i=1}^{d_k} q_i k_i$ has variance $d_k$. Dividing by $\sqrt{d_k}$ normalises the variance to 1, placing the scores in a regime where softmax is neither saturated nor uniform.
+
+This assumption **fails categorically** for the Fock creation gate. The key difference is the **scale of the queries**:
+
+**Standard attention (Transformer):**
+- $W_Q \in \mathbb{R}^{d \times d_k}$, initialised with Xavier/Kaiming (std $\approx 1/\sqrt{d}$)
+- Token embeddings $h_i$ have $\lVert h_i \rVert \sim \sqrt{d}$ after LayerNorm
+- Query norm: $\lVert q_i \rVert = \lVert W_Q h_i \rVert \sim \sqrt{d_k}$ — the queries are $O(1)$ per dimension
+
+**Fock creation gate:**
+- $W_Q^{(k)} \in \mathbb{R}^{d \times d_k}$, initialised with std $= 0.02$ (`register_init_scale`)
+- Register states $r_k$ initialised at std $= 0.02$
+- Query norm: $\lVert q_k \rVert = \lVert W_Q^{(k)} r_k \rVert \sim d \cdot (0.02)^2 \approx 0.1$
+
+At $d = 256$, $d_k = 64$, with `init_scale = 0.02`:
+
+$$\text{Var}(q_k \cdot k_j) = d_k \cdot \text{Var}(q_{k,i}) \cdot \text{Var}(k_{j,i}) \approx d_k \cdot (0.02)^4 \cdot \lVert r_k \rVert^2 \cdot \lVert h_j \rVert^2$$
+
+Empirically, the raw score standard deviation at initialisation is:
+
+$$\sigma_s \approx 0.009$$
+
+The standard scaling divides by $\sqrt{d_k} = 8$, yielding effective score standard deviation:
+
+$$\sigma_\text{eff} = \frac{\sigma_s}{\sqrt{d_k}} = \frac{0.009}{8} = 0.001$$
+
+### 14.3 The Softmax Entropy–Temperature Relationship
+
+For scores $s_1, \ldots, s_T$ drawn from a distribution with standard deviation $\sigma_s$, the softmax at temperature $\tau$ is:
+
+$$p_j(\tau) = \frac{\exp(s_j / \tau)}{\sum_{k=1}^T \exp(s_k / \tau)}$$
+
+The normalised entropy $\bar{H}(\tau) = H(\tau) / \ln T$ is a monotonically increasing function of $\tau$ (monotonically decreasing in $1/\tau$). The effective score standard deviation $\sigma_\text{eff} = \sigma_s / \tau$ determines the entropy:
+
+| $\sigma_\text{eff}$ | $\bar{H}$ (normalised entropy) | $n_\text{eff} = e^H$ | Regime |
+|---|---|---|---|
+| 0.001 | 1.0000 | 256.0 | Fully uniform — mean-pool |
+| 0.01 | 1.0000 | 256.0 | Still uniform |
+| 0.1 | 0.999 | 255 | Barely selective |
+| 0.5 | 0.979 | 228 | Weakly selective |
+| 1.0 | 0.907 | 153 | Moderately selective |
+| 2.0 | 0.552 | 21 | Strongly selective |
+| 3.0 | 0.208 | 3.2 | Highly peaked |
+| 5.0 | 0.029 | 1.2 | Near one-hot |
+
+The table reveals the core problem. With the standard $1/\sqrt{d_k}$ scaling ($\sigma_\text{eff} = 0.001$), the creation gate is **firmly in the uniform regime** — and it stays there even after training. After 2000 training steps, the weight norms grow by roughly $10\times$, pushing $\sigma_s$ to $\sim 0.09$. But $\sigma_\text{eff} = 0.09/8 = 0.011$ — still completely uniform.
+
+The creation gate needs $\sigma_\text{eff} \geq 1$ to reach the moderately selective regime ($n_\text{eff} \lesssim 150$) and $\sigma_\text{eff} \geq 2$ for strongly selective attention ($n_\text{eff} \lesssim 20$). With the fixed $1/\sqrt{d_k}$ scaling, this requires score standard deviations of $\sigma_s \geq 8$ — an $800\times$ increase from initialization that takes far more than 2000 steps to achieve organically through gradient flow.
+
+### 14.4 Why This Problem Does Not Arise in Standard Attention
+
+In a Transformer, the scaling $1/\sqrt{d_k}$ works because the query and key projections are initialised with Xavier/Kaiming scaling (std $\sim 1/\sqrt{d}$), and the token embeddings are $O(\sqrt{d})$ in norm. The resulting score standard deviation at initialisation is:
+
+$$\sigma_s \approx \sqrt{d_k} \cdot \frac{1}{\sqrt{d}} \cdot \sqrt{d} = \sqrt{d_k}$$
+
+After dividing by $\sqrt{d_k}$: $\sigma_\text{eff} \approx 1$ — exactly in the moderately selective regime. The Transformer's $1/\sqrt{d_k}$ scaling was **calibrated for Transformer-scale initialisation**. The Fock creation gate uses a deliberately small `init_scale = 0.02` to ensure the register mechanism starts gently and does not destabilise the PARF dynamics. This conservative initialisation is correct for training stability, but it renders the standard temperature scaling useless.
+
+### 14.5 The Fix: Learnable Log-Space Temperature
+
+Replace the fixed $1/\sqrt{d_k}$ with a **learnable temperature** $\tau$ parameterised in log-space:
+
+$$\alpha_{kj} = \mathrm{softmax}_j\left(\frac{q_k \cdot k_j}{\tau}\right), \qquad \tau = \exp(\theta_\tau), \qquad \theta_\tau \in \mathbb{R}$$
+
+where $\theta_\tau$ is a learnable scalar initialised to $\ln(\tau_0)$. The log-space parameterisation ensures $\tau > 0$ without explicit clamping and provides a natural multiplicative learning dynamic: equal gradient steps produce equal proportional changes in $\tau$.
+
+**Initialisation:** $\tau_0 = 0.1$ (i.e. $\theta_\tau = \ln 0.1 \approx -2.3$).
+
+At $\tau_0 = 0.1$ with $\sigma_s = 0.009$: $\sigma_\text{eff} = 0.009 / 0.1 = 0.09$. This is still in the near-uniform regime at initialisation, but it is $80\times$ sharper than the standard $1/\sqrt{d_k}$ scaling. More importantly, the score $\sigma_\text{eff}$ scales as $\sigma_s / \tau$ — as the weights grow during training, the sharpening compounds. At $\sigma_s = 0.1$ (after modest training), $\sigma_\text{eff} = 1.0$ — entering the moderately selective regime.
+
+**The critical advantage of learnability:** The model can discover the optimal temperature through backpropagation. The gradient:
+
+$$\frac{\partial \mathcal{L}}{\partial \theta_\tau} = \frac{\partial \mathcal{L}}{\partial \tau} \cdot \tau$$
+
+provides a natural signal. If the loss benefits from sharper attention (lower $\tau$), the gradient pushes $\theta_\tau$ negative, decreasing $\tau$ exponentially. If the model needs uniform attention at some stage (e.g. early training when scores are noisy), it can increase $\tau$. The fixed $1/\sqrt{d_k}$ scaling offers no such adaptivity.
+
+### 14.6 Connection to Temperature Scaling in the Literature
+
+The learnable temperature parameter connects to several established techniques:
+
+**Gumbel-Softmax** (Jang et al. 2017; Maddison et al. 2017). In the Gumbel-Softmax framework, temperature $\tau$ controls the "hardness" of discrete selection: $\tau \to 0$ approximates argmax (hard selection), $\tau \to \infty$ produces uniform soft weighting. The creation gate temperature serves an analogous role — it controls whether registers select specific tokens (low $\tau$, hard attention) or average over all tokens (high $\tau$, soft attention).
+
+**Cosine similarity temperature** (Radford et al. 2021, CLIP; He et al. 2020, MoCo). Contrastive learning uses a learnable temperature to scale the logits in the InfoNCE loss. CLIP's temperature starts at $\tau = 0.07$ and is learned — converging to values that maximise the mutual information between the two modality embeddings. The creation gate temperature serves the same structural role: maximising the mutual information between registers and the tokens they attend to.
+
+**Attention temperature in efficient attention** (Zhai et al. 2021). Scaling Vision Transformers uses per-head learnable temperatures to replace $1/\sqrt{d_k}$, finding that different heads converge to different temperatures — some sharply peaked, others nearly uniform. This suggests the optimal temperature is **task-dependent and layer-dependent**, motivating learnability over any fixed value.
+
+### 14.7 Effective Number of Attended Tokens and Information Capacity
+
+The effective number of attended tokens $n_\text{eff} = \exp(H)$ determines the **information-theoretic capacity** of each register. Under the data processing inequality:
+
+$$I(r_k; h_{1:T}) \leq d \cdot \ln(n_\text{eff})$$
+
+where $I$ denotes mutual information and $d$ is the embedding dimension. At $n_\text{eff} = T = 256$ (uniform attention), the register can carry $d \ln T \approx 1408$ nats — but spread diffusely across all tokens, providing low signal-to-noise for any individual token's semantics. At $n_\text{eff} = 5$ (sharply peaked), the register carries $d \ln 5 \approx 412$ nats — concentrated on a small number of tokens, providing high signal-to-noise for specific contextual cues.
+
+For next-token prediction, the relevant information is typically concentrated in a few key tokens (subject for verb agreement, antecedent for pronoun resolution, opening bracket for bracket matching). Registers that can **selectively attend** to these tokens are far more useful than registers that average over the entire context. The learnable temperature allows the model to discover the optimal $n_\text{eff}$ for each task.
+
+### 14.8 D3 Evidence: Wider Queries Partially Compensate
+
+The D3 arm ($d_k = 128$, double the baseline) provides partial corroboration. With wider queries, the score standard deviation increases by $\sqrt{2}$:
+
+$$\sigma_s \propto \sqrt{d_k} \implies \sigma_s^{(d_k=128)} \approx \sqrt{2} \cdot \sigma_s^{(d_k=64)}$$
+
+This produces a modest entropy reduction at layer 1 (0.937 vs D1's 0.996) and a PPL improvement from 52.6 to 49.9. The mechanism is the same — increasing $\sigma_\text{eff}$ — but achieved through a larger projection dimension (which costs more parameters) rather than through temperature (which costs a single scalar). The learnable temperature is the more efficient intervention: **one parameter instead of $M \cdot d \cdot \Delta d_k$** additional projection parameters.
+
+### 14.9 Updated Architecture: Creation Gate with Learnable Temperature
+
+The updated Q/K/V creation equations from §9.1 become:
+
+$$\alpha_{kj} = \mathrm{softmax}_j\left(\frac{q_k \cdot k_j}{\tau}\right), \qquad \tau = \exp(\theta_\tau), \quad \theta_\tau \in \mathbb{R}$$
+
+replacing the previous:
+
+$$\alpha_{kj} = \mathrm{softmax}_j\left(\frac{q_k \cdot k_j}{\sqrt{d_k}}\right)$$
+
+The `FockPARFConfig_v2` dataclass gains a new field:
+
+```python
+tau_create_init: Optional[float] = 0.1   # None → fallback to 1/√d_k
+```
+
+The `QKVCreationGate` stores:
+
+```python
+self.log_tau = nn.Parameter(torch.tensor(tau_create_init).log())
+```
+
+and applies it during forward:
+
+```python
+tau = self.log_tau.exp().clamp(min=1e-4)
+scores = scores / tau   # replaces: scores / (d_k ** 0.5)
+```
+
+Setting `tau_create_init = None` recovers the original $1/\sqrt{d_k}$ behaviour for backward compatibility.
+
+### 14.10 The D6 Experiment
+
+The D6 arm of the TinyStories debug notebook tests this fix directly:
+
+| Arm | Configuration | Purpose |
+|---|---|---|
+| D1 | FockPARF v2, M=16, $1/\sqrt{d_k}$ scaling | Baseline (entropy $\approx 1.0$) |
+| **D6** | **FockPARF v2, M=16, $\tau_0 = 0.1$ (learnable)** | **Tests B1 fix** |
+
+**Predictions:**
+- Attention entropy at layer 1 should drop from 0.996 (D1) to $< 0.95$ (D6)
+- If $\tau$ learns to decrease further, entropy could reach 0.5–0.7 range ($n_\text{eff} \sim 20\text{–}100$)
+- PPL should improve beyond D1's 52.6, potentially approaching D3's 49.9 without the extra projection parameters
+- If $\tau$ grows (model prefers uniform attention), the fix has no effect — ruling out B1 as the binding bottleneck
+
+The temperature evolution curve $\tau(t)$ is logged at every training step, providing a direct readout of whether the model wants sharper or broader attention.
 
 ---
 
@@ -673,6 +885,16 @@ The v3 mechanism maps to **non-abelian gauge theory**: register groups transform
 - **Peliti, L.** (1985). Path integral approach to birth-death processes on a lattice. *Journal de Physique*, 46(9), 1469–1483.
 
 - **Vaswani, A., Shazeer, N., Parmar, N., et al.** (2017). Attention is all you need. *NeurIPS 30*.
+
+- **Jang, E., Gu, S., Poole, B.** (2017). Categorical reparameterization with Gumbel-Softmax. *ICLR 2017*.
+
+- **Maddison, C. J., Mnih, A., Teh, Y. W.** (2017). The concrete distribution: A continuous relaxation of discrete random variables. *ICLR 2017*.
+
+- **Radford, A., Kim, J. W., Hallacy, C., et al.** (2021). Learning transferable visual models from natural language supervision. *ICML 2021*. (CLIP — learnable temperature in contrastive loss.)
+
+- **He, K., Fan, H., Wu, Y., Xie, S., Girshick, R.** (2020). Momentum contrast for unsupervised visual representation learning. *CVPR 2020*. (MoCo — temperature-scaled softmax.)
+
+- **Zhai, S., Talbott, S., Srivastava, N., et al.** (2021). An attention free transformer. *arXiv:2105.14103*. (Per-head learnable temperature.)
 
 - `docs/fock-parflm/Augmenting_PARFLM_to_handle_MCS_Languages.md`: FockPARFLM Phase 1 results and Phase 2 experimental plan  
 - `docs/parflm/PARF-SPLM_Path_Forward_and_Experiments.md`: P10 ladder context  
