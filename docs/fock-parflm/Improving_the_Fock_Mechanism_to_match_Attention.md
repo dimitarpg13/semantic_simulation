@@ -896,9 +896,9 @@ The temperature evolution curve $\tau(t)$ is logged at every training step, prov
 
 - **Zhai, S., Talbott, S., Srivastava, N., et al.** (2021). An attention free transformer. *arXiv:2105.14103*. (Per-head learnable temperature.)
 
-- `docs/fock-parflm/Augmenting_PARFLM_to_handle_MCS_Languages.md`: FockPARFLM Phase 1 results and Phase 2 experimental plan  
-- `docs/parflm/PARF-SPLM_Path_Forward_and_Experiments.md`: P10 ladder context  
-- `semsimula-paper/notebooks/conservative_arch/parf/results/fockparf_improvement/`: Full P1–P5 sweep results  
+- `docs/Augmenting_PARFLM_to_handle_MCS_Languages.md`: FockPARFLM Phase 1 results and Phase 2 experimental plan  
+- `docs/PARF-SPLM_Path_Forward_and_Experiments.md`: P10 ladder context  
+- `notebooks/conservative_arch/parf/results/fockparf_improvement/`: Full P1–P5 sweep results  
 
 ---
 
