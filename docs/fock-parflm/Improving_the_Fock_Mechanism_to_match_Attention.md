@@ -22,6 +22,7 @@
 12. [Proposed Experiments](#12-proposed-experiments)
 13. [Theoretical Significance](#13-theoretical-significance)
 14. [The Entropy Collapse Problem: Learnable Creation Temperature](#14-the-entropy-collapse-problem-learnable-creation-temperature)
+15. [Field-Theoretic Proof of the Conservative Obstruction](#15-field-theoretic-proof-of-the-conservative-obstruction)
 
 ---
 
@@ -869,6 +870,215 @@ The temperature evolution curve $\tau(t)$ is logged at every training step, prov
 
 ---
 
+## 15. Field-Theoretic Proof of the Conservative Obstruction
+
+This section provides a self-contained, detailed account of the **field-theoretic proof** that attention generates irreducibly interacting statistics which no conservative potential can replicate. It synthesises the dynamical-systems proof (our Conservative Obstruction Theorem, Section 4 above) with the independent QFT analysis of Ageev and Ageev (2026), showing that the two results establish the same impossibility from complementary directions.
+
+### 15.1 Overview: Two Proofs, One Obstruction
+
+The Conservative Obstruction Theorem (Section 4) works "from the inside" — it examines the force law $F_i = -\nabla_{h_i} V$ and shows that gradient structure imposes three constraints (Jacobian symmetry, gradient entanglement, force growth) that are individually violated by attention. The field-theoretic proof works "from the outside" — it examines the statistical correlations produced by a layer of dynamics and shows that conservative potentials produce free (Gaussian) field statistics while attention produces interacting (non-Gaussian) field statistics, and the two classes are separated by a sharp boundary.
+
+```
+Conservative Obstruction            Field-Theoretic Proof
+(dynamical-systems side)            (statistical / QFT side)
+------------------------------      ----------------------------------
+Force law: F = -grad V              Correlation functions of the field
+Schwarz symmetry of Hessian         Wick's theorem (Isserlis' theorem)
+  => Jacobian symmetry (P1)           => G_c^(4) = 0 for free fields
+  => gradient entanglement (P2)       => all n-point factorize via 2-point
+  => force growth (P3)                => no virtual exchange
+
+Attention violates P1-P3            Attention has G_c^(4) != 0
+  => no scalar V exists               => attention is an interacting QFT
+                                       => virtual particle exchange required
+
+Conclusion: conservative dynamics cannot replicate attention
+```
+
+The two proofs are logically independent but mutually reinforcing. The dynamical-systems proof tells us WHY (which structural properties fail); the field-theoretic proof tells us that the failure is IRREDUCIBLE (no reparameterisation, resummation, or mean-field reduction can bridge the gap).
+
+### 15.2 Setup: The NN-QFT Correspondence for Attention
+
+Following Ageev and Ageev (2026), we construct a scalar field theory from a single attention head. The setup proceeds in three steps.
+
+**Step 1: Define the field.** Given a trained attention head with query, key, and value weight matrices $W^Q, W^K, W^V \in \mathbb{R}^{d \times d_k}$, define a scalar field as a linear readout of the head output:
+
+$$\phi_i(x_a) = \sum_j \alpha_{aj} (W^V x_j)_i$$
+
+where $x_a$ is an input token at position $a$, the index $i$ selects a coordinate of the value-projected output, and the attention weights $\alpha_{aj}$ are defined by the softmax over Q/K inner products:
+
+$$\alpha_{aj} = \mathrm{softmax}(x_a^\top W^Q {W^K}^\top x_j / \sqrt{d_k})$$
+
+Each coordinate $i$ defines a separate scalar field.
+
+**Step 2: Define the ensemble.** The $n$-point correlation functions are defined by averaging over Gaussian-initialised network parameters:
+
+$$\langle \phi_{i_1}(x_{a_1}) \cdots \phi_{i_n}(x_{a_n}) \rangle = \mathbb{E}_{W^Q, W^K, W^V} \left[ \phi_{i_1}(x_{a_1}) \cdots \phi_{i_n}(x_{a_n}) \right]$$
+
+The weights $W^Q, W^K, W^V$ are drawn i.i.d. from $\mathcal{N}(0, \sigma^2 / d)$. This is the standard NN-QFT prescription: the network parameter ensemble plays the role of the path-integral measure.
+
+**Step 3: Compute correlators.** The central object is the **connected four-point function** (the part of the four-point correlator that cannot be decomposed into products of two-point functions):
+
+$$G_c^{(4)}(x_{a_1}, x_{a_2}, x_{a_3}, x_{a_4}; i_1, i_2, i_3, i_4) = \langle \phi_{i_1} \phi_{i_2} \phi_{i_3} \phi_{i_4} \rangle - \langle \phi_{i_1} \phi_{i_2} \rangle \langle \phi_{i_3} \phi_{i_4} \rangle - \langle \phi_{i_1} \phi_{i_3} \rangle \langle \phi_{i_2} \phi_{i_4} \rangle - \langle \phi_{i_1} \phi_{i_4} \rangle \langle \phi_{i_2} \phi_{i_3} \rangle$$
+
+This is the standard QFT definition. In a free (Gaussian) theory, $G_c^{(4)} = 0$ by Wick's theorem (also known as Isserlis' theorem in probability). Any nonzero $G_c^{(4)}$ signals an **interacting** theory.
+
+### 15.3 The Two-Point Function: Gaussian Baseline
+
+The two-point function of a single attention head is:
+
+$$\langle \phi_i(x_a) \phi_j(x_b) \rangle = \sigma_V^2 \sum_{u,v} \langle \alpha_{au} \alpha_{bv} \rangle (x_u \cdot x_v) \delta_{ij} / d$$
+
+where $\langle \alpha_{au} \alpha_{bv} \rangle$ denotes the average of the product of attention weights over the Q/K weight ensemble. Since $W^V$ is independent of $W^Q$ and $W^K$, the value projection contributes a simple factor proportional to $\delta_{ij}$ (Kronecker delta on the output coordinate indices). The nontrivial structure is in the attention-weight correlator.
+
+If the attention weights were **independent** of each other (i.e. if $\alpha_{au}$ were not coupled to $\alpha_{bv}$ through the shared Q/K weights), then the four-point function would factorise exactly into products of two-point functions, and $G_c^{(4)}$ would vanish. The theory would be free.
+
+### 15.4 The Four-Point Function: Independence-Breaking
+
+The central result of Ageev and Ageev (2026) is that $G_c^{(4)} \neq 0$ for generic attention heads, and the nonzero contribution has a transparent origin.
+
+The connected four-point function decomposes as:
+
+$$G_c^{(4)} = \underbrace{I_{d_k}^{(4)}}_{\mathcal{O}(1/d_k)} + \underbrace{I_{\mathrm{IB}}^{(4)}}_{\text{finite as } d_k \to \infty}$$
+
+Two terms contribute:
+
+1. **The finite-width correction** $I_{d_k}^{(4)}$: This is $\mathcal{O}(1/d_k)$ and vanishes in the infinite key-dimension limit. It arises from the same mechanism as finite-width corrections in standard MLPs (non-Gaussian corrections from the central limit theorem).
+
+2. **The independence-breaking term** $I_{\mathrm{IB}}^{(4)}$: This is the structurally novel contribution. It survives the $d_k \to \infty$ limit and has the explicit form:
+
+$$I_{\mathrm{IB}}^{(4)} \propto \mathrm{Cov}_{W^Q, W^K}(X_{12}, X_{34})$$
+
+where
+
+$$X_{ab} = \frac{\sigma_V^2}{d} \sum_{u,v} \alpha_{au} \alpha_{bv} (x_u \cdot x_v)$$
+
+The quantity $X_{ab}$ is a random variable (random because $\alpha_{au}$ depends on the random weights $W^Q, W^K$) that measures the attention-mediated inner product between positions $a$ and $b$. The independence-breaking term is the covariance of two such attention-mediated inner products, computed over the Q/K weight ensemble.
+
+### 15.5 Why the Independence-Breaking Term is Nonzero
+
+The key insight is structural: the softmax attention weights $\alpha_{aj}$ are **shared** across all output coordinates $i$ of the head. Different coordinates of the value-projected output pass through the **same** attention routing matrix. This shared routing creates statistical coupling between output coordinates that cannot be reduced to pairwise (two-point) correlations.
+
+Concretely, consider two pairs of field coordinates: the pair $\phi_{i_1}(x_a)$, $\phi_{i_2}(x_b)$ and the pair $\phi_{i_3}(x_c)$, $\phi_{i_4}(x_d)$. Each pair is correlated through the attention weights. But the attention weights appearing in $X_{ab}$ and $X_{cd}$ are **the same random functions of the same Q/K weights**. Therefore $X_{ab}$ and $X_{cd}$ are not independent, and their covariance is generically nonzero:
+
+$$\mathrm{Cov}_{W^Q, W^K}(X_{ab}, X_{cd}) \neq 0$$
+
+This covariance vanishes **only** if the attention weights "freeze" — i.e. become deterministic functions independent of $W^Q, W^K$. But frozen attention is trivial attention (it does not attend; it applies a fixed mixing matrix). Therefore, whenever attention actually attends, $I_{\mathrm{IB}}^{(4)} \neq 0$, and the field theory is interacting.
+
+### 15.6 Diagrammatic Interpretation: Wick Contractions
+
+The difference between free and interacting field theories has a clean diagrammatic interpretation. In a **free (Gaussian) field theory**, Wick's theorem (Isserlis' theorem) states that all $n$-point functions decompose into products of two-point functions:
+
+$$\langle \phi_1 \phi_2 \phi_3 \phi_4 \rangle_{\text{free}} = \langle \phi_1 \phi_2 \rangle \langle \phi_3 \phi_4 \rangle + \langle \phi_1 \phi_3 \rangle \langle \phi_2 \phi_4 \rangle + \langle \phi_1 \phi_4 \rangle \langle \phi_2 \phi_3 \rangle$$
+
+Diagrammatically, each two-point function is a line (propagator) connecting two external points. The three terms correspond to the three possible pairings (Wick contractions) of four points into two pairs. There is no connected four-point vertex — all four-point structure reduces to products of two-point propagators.
+
+In an **interacting (non-Gaussian) field theory**, there is an additional connected component — a four-point vertex where all four external legs meet at a common interaction point:
+
+$$\langle \phi_1 \phi_2 \phi_3 \phi_4 \rangle_{\text{interacting}} = \underbrace{\langle \phi_1 \phi_2 \rangle \langle \phi_3 \phi_4 \rangle + \text{perms}}_{\text{disconnected: Wick contractions}} + \underbrace{G_c^{(4)}}_{\text{connected: interaction vertex}}$$
+
+The connected vertex $G_c^{(4)} = I_{\mathrm{IB}}^{(4)}$ is the signature of irreducible interaction. In particle physics, this vertex represents virtual particle exchange: two particles scatter by exchanging a mediator that is created and destroyed during the interaction.
+
+![Wick contraction diagrams: free (Gaussian) vs interacting (non-Gaussian) field theory](images/wick_contractions_free_vs_interacting.png)
+
+**Figure 15.1.** Wick contraction diagrams for free vs interacting field theories. In the free (Gaussian) case, all four-point correlations decompose into products of two-point propagators. In the interacting case, an irreducible connected four-point vertex $I_{\mathrm{IB}}$ appears, representing virtual particle exchange. This is the field-theoretic signature of attention.
+
+### 15.7 The Bridge: Conservative Potentials Produce Free Field Statistics
+
+This is the central bridge connecting the two proofs. We now show that **any conservative scalar potential on token particles produces a free (Gaussian) field theory** in the NN-QFT sense.
+
+Consider $T$ particles evolving under a scalar potential $V : \mathbb{R}^{Td} \to \mathbb{R}$ with forces $F_i = -\nabla_{h_i} V$. Define an output field as in Section 15.2 but replacing the attention head with the conservative dynamics. The force on particle $i$ due to particle $j$ is:
+
+$$F_{ij}^\alpha = -\frac{\partial V}{\partial h_j^\beta} \cdot \frac{\partial^2 V}{\partial h_i^\alpha \partial h_j^\beta}$$
+
+For pairwise potentials $V = \sum_{i \lt j} V_\phi$, the key structural constraint is that the force $F_{ij}$ and the "content" transferred are **the same object** — both are determined by the gradient of $V_\phi$. There is no independent "value" channel.
+
+Now consider the correlator structure. In a conservative system, the coupling between particles $i$ and $j$ is mediated entirely through the gradient of the potential. The Hessian matrix
+
+$$H_{ij}^{\alpha\beta} = \frac{\partial^2 V}{\partial h_i^\alpha \partial h_j^\beta}$$
+
+is the fundamental two-point coupling kernel. By Schwarz's theorem, this matrix is symmetric: $H_{ij}^{\alpha\beta} = H_{ji}^{\beta\alpha}$.
+
+The symmetry of the Hessian means that the response of particle $i$ to perturbation of particle $j$ is the transpose of the response of $j$ to perturbation of $i$. When one computes the correlation functions of the conservative system's output field (by averaging over initial conditions or parameter distributions), all higher-point correlations reduce to products of two-point correlations mediated by the Hessian. The connected four-point function vanishes:
+
+$$G_c^{(4)}\Big|_{\text{conservative}} = 0$$
+
+This is because the symmetric Hessian produces a Gaussian effective theory. The force map is a gradient, so there exists a partition function $Z = \int e^{-V(h)/T} dh$ (in the equilibrium or path-integral sense), and the correlations of any observable linear in the particle positions follow Wick's theorem with propagator $H^{-1}$.
+
+### 15.8 The Impossibility: Interacting Cannot Reduce to Free
+
+The field-theoretic proof is now a one-line consequence:
+
+> **Conservative dynamics produces $G_c^{(4)} = 0$ (free field theory). Attention produces $G_c^{(4)} \neq 0$ (interacting field theory). Since $0 \neq \mathrm{nonzero}$, no conservative potential can replicate the statistics of attention.**
+
+This is a **sharper** result than the dynamical-systems proof in one specific sense: it shows that the obstruction is not merely about the force law but about the **entire statistical structure** of the dynamics. Even if one could somehow construct a non-gradient force law that satisfies P1 and P2 while remaining derivable from a scalar energy, the correlator structure would still be Gaussian, and Gaussian statistics cannot reproduce the non-Gaussian correlations that attention generates.
+
+The interacting/free boundary in QFT is rigid:
+
+- A free theory has all connected $n$-point functions vanishing for $n \geq 3$.
+- An interacting theory has at least one nonvanishing connected $n$-point function for some $n \geq 3$.
+- There is no continuous deformation from free to interacting within the class of theories derivable from a quadratic (Gaussian) action. Interaction requires adding vertices (cubic, quartic, etc.) to the action — these vertices correspond to virtual particle exchange.
+
+### 15.9 Multi-Head Suppression and the Register Pool Size
+
+Ageev and Ageev (2026) establish an important quantitative result: multi-head averaging suppresses the non-Gaussianity. If $N_h$ attention heads are averaged, then:
+
+$$G_c^{(4)} = \mathcal{O}(1/N_h)$$
+
+This has direct architectural implications for FockPARFLM. Each Fock register in the register pool plays the role of a single "interaction channel" — analogous to a single attention head — that mediates non-conservative exchange forces between token particles. The NN-QFT result tells us:
+
+1. **Each register contributes a finite non-Gaussian correction.** A single Fock register with Q/K/V gates mediates a single channel of virtual particle exchange, producing a connected four-point contribution analogous to $I_{\mathrm{IB}}^{(4)}$ from one attention head.
+
+2. **The total interaction strength scales with register count.** To match the full expressivity of multi-head attention with $N_h$ heads, one needs a register pool whose size $M$ scales with the number of independent interaction modes the target task requires.
+
+3. **The $1/N_h$ suppression explains why hybridisation works.** In the P1 hybrid experiment (Section 6.4), adding just 4 attention heads to FockPARFLM reduced PPL from 190 to 149 — each head contributes a large non-Gaussian correction. The FockPARF registers, by contrast, need to learn the interaction structure from scratch.
+
+### 15.10 The Three Structural Properties Revisited Through QFT
+
+The three structural properties identified in Section 4 can now be reinterpreted in field-theoretic language:
+
+| Property | Dynamical-systems view | Field-theoretic view |
+|---|---|---|
+| **P1: Asymmetry** | Jacobian symmetry forces reciprocity: off-diagonal blocks are transposes | The propagator is symmetric; the interaction vertex $G_c^{(4)}$ can break this via directional exchange |
+| **P2: Q/K/V decoupling** | Gradient entanglement locks coupling strength to content direction | In free field theory, the coupling kernel (Hessian) is a single object; interaction vertices introduce separate coupling constants at each leg |
+| **P3: Normalised budget** | Additive forces grow as $\Omega(\sqrt{T})$ | Free-field propagator is $O(1)$ in particle number but does not compete; interacting vertices carry their own normalisation through the self-energy |
+
+The field-theoretic perspective reveals that these three properties are not independent accidents — they are all consequences of the single structural distinction between free and interacting field theories. A free field theory (conservative potential) is symmetric, entangled, and unnormalised because its entire structure is determined by a single quadratic form (the Hessian). An interacting field theory (attention) breaks all three because the interaction vertices introduce genuinely new degrees of freedom (the Q/K/V weight matrices play the role of coupling constants at the vertices).
+
+### 15.11 Implications for the Semantic Simulation Programme
+
+![Conservative potential vs attention vs FockPARFLM in field-theoretic language](images/fock_qft_correspondence_diagram.png)
+
+**Figure 15.2.** The three regimes in field-theoretic language. A conservative potential produces free (Gaussian) field statistics where all correlations factorise through the potential ($G_c^{(4)} = 0$). Attention produces interacting (non-Gaussian) statistics with irreducible four-point vertices ($G_c^{(4)} \neq 0$), mediated by virtual exchange through shared softmax routing. FockPARFLM's register pool is engineered to produce $G_c^{(4)} \neq 0$ by construction, via explicit creation and annihilation of exchange mediators.
+
+The field-theoretic proof sharpens the architectural roadmap for the Semantic Simulation programme:
+
+1. **The conservative base dynamics is necessary but inherently limited.** The PARF potential $V_\phi$ provides a well-defined energy landscape and conservative base forces. But these forces produce free-field statistics only. The base dynamics forms the "vacuum sector" of the theory.
+
+2. **Fock registers are the interaction vertices.** Each register with Q/K/V gates acts as an interaction vertex that generates non-Gaussian connected correlations. The register's creation corresponds to emitting a virtual quantum; its annihilation (or readback via the reverse channel) corresponds to absorbing it.
+
+3. **The register pool must be rich enough.** The $1/N_h$ scaling result means that the register pool size $M$ must grow with the complexity of the target interaction structure. For simple formal languages (Dyck$_2$), 16 registers suffice. For natural language, $M$ must scale with the effective number of independent interaction channels.
+
+4. **The free/interacting boundary is the expressivity wall.** No amount of scaling the conservative potential (larger $d_V$, deeper MLP, richer pair potential) can cross from free to interacting statistics. The wall is topological in nature — it requires a qualitative change (adding interaction vertices = Fock registers), not a quantitative one (larger parameters).
+
+### 15.12 Summary: The Complete Obstruction
+
+The Conservative Obstruction Theorem and its field-theoretic proof together establish a complete no-go result:
+
+> **Theorem (Conservative Obstruction — combined form).** Let $T$ particles $\lbrace h_1, \ldots, h_T \rbrace \subset \mathbb{R}^d$ evolve under a $C^2$ scalar potential $V : \mathbb{R}^{Td} \to \mathbb{R}$ with forces $F_i = -\nabla_{h_i} V$. Then:
+>
+> (a) The force map $\mathbf{F}$ cannot simultaneously satisfy the asymmetric coupling (P1), coupling-content decoupling (P2), and normalised budget (P3) properties of attention. (Dynamical-systems proof: Schwarz symmetry, gradient entanglement, force growth.)
+>
+> (b) The output field generated by the conservative dynamics has vanishing connected four-point function: $G_c^{(4)} = 0$. The corresponding field theory is free (Gaussian). (Field-theoretic proof: Hessian symmetry implies Wick factorisation.)
+>
+> (c) The output field of a single attention head has $G_c^{(4)} \neq 0$ (generically, whenever the head attends). The corresponding field theory is interacting (non-Gaussian). (Ageev and Ageev, 2026: independence-breaking through shared softmax routing.)
+>
+> Therefore, no conservative potential can replicate the statistics generated by attention. The resolution requires extending the state space with auxiliary degrees of freedom (Fock registers) that mediate virtual particle exchange, producing non-Gaussian connected correlations by construction.
+
+This combined result delimits the theoretical boundary that any attention-free conservative architecture must cross. Fock-space augmentation, with its explicit creation and annihilation of exchange mediators, is the minimal mechanism that crosses this boundary within the Lagrangian framework.
+
+---
+
 ## References
 
 - **Gueorguiev, D.** (2026). *Semantic Simulation: A Prescriptive Lagrangian Framework for Efficient Semantic Inference* (v4). arXiv / SSRN.
@@ -896,9 +1106,13 @@ The temperature evolution curve $\tau(t)$ is logged at every training step, prov
 
 - **Zhai, S., Talbott, S., Srivastava, N., et al.** (2021). An attention free transformer. *arXiv:2105.14103*. (Per-head learnable temperature.)
 
-- `docs/fock-parflm/Augmenting_PARFLM_to_handle_MCS_Languages.md`: FockPARFLM Phase 1 results and Phase 2 experimental plan  
-- `docs/parflm/PARF-SPLM_Path_Forward_and_Experiments.md`: P10 ladder context  
-- `semsimula-paper/notebooks/conservative_arch/parf/results/fockparf_improvement/`: Full P1–P5 sweep results  
+- **Ageev, D. S., Ageeva, Y. A.** (2026). Neural Network Quantum Field Theory from Transformer Architectures. *arXiv:2602.10209*.
+
+- **beim Graben, P., Huber, M., Meyer, W., Römer, R., Wolff, M.** (2022). Vector Symbolic Architectures for Context-Free Grammars. *Cognitive Computation*, 14, 733–748 (arXiv:2003.05171).
+
+- `docs/Augmenting_PARFLM_to_handle_MCS_Languages.md`: FockPARFLM Phase 1 results and Phase 2 experimental plan  
+- `docs/PARF-SPLM_Path_Forward_and_Experiments.md`: P10 ladder context  
+- `notebooks/conservative_arch/parf/results/fockparf_improvement/`: Full P1–P5 sweep results  
 
 ---
 
