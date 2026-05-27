@@ -11,3 +11,8 @@ docs/hopfield_networks/images/exp_gpt2_stage6_tangential_acceleration.png filter
 docs/hopfield_networks/images/vanilla_splm_architecture.png filter=lfs diff=lfs merge=lfs -text
 docs/fock-parflm/images/fock_qft_correspondence_diagram.png filter=lfs diff=lfs merge=lfs -text
 docs/fock-parflm/images/wick_contractions_free_vs_interacting.png filter=lfs diff=lfs merge=lfs -text
+literature/articles/entropic_optimal_transport/Designing_Algorithms_for_Entropic_Optimal_Transport_from_an_Optimisation_Perspective_Srinivasan_2025.pdf filter=lfs diff=lfs merge=lfs -text
+literature/articles/entropic_optimal_transport/EOT_lecture_notes_Nuntz_2022.pdf filter=lfs diff=lfs merge=lfs -text
+literature/articles/entropic_optimal_transport/NeurIPS-2020-entropic-optimal-transport-between-unbalanced-gaussian-measures-has-a-closed-form-Paper.pdf filter=lfs diff=lfs merge=lfs -text
+literature/articles/entropic_optimal_transport/A_Sinkhorn-type_Algorithm_for_Constrained_Optimal_Transport_Tang_2024.pdf filter=lfs diff=lfs merge=lfs -text
+literature/articles/entropic_optimal_transport/Concerning_nonnegative_matrices_and_doubly_stochastic_matrices_Sinkhorn_1967.pdf filter=lfs diff=lfs merge=lfs -text
