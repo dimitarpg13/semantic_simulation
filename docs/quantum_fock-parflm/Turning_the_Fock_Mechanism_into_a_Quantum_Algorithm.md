@@ -218,21 +218,21 @@ hard constraints:
 
 ```mermaid
 flowchart TB
-    CL["Classical algorithm"]
-    O1["Obstruction 1: unitarity"]
-    O2["Obstruction 2: data input bottleneck"]
-    O3["Obstruction 3: measurement bottleneck"]
-    O4["Obstruction 4: control flow"]
-    QA["Quantum algorithm"]
+    Classical[Classical algorithm]
+    Unitarity[Obstruction one unitarity]
+    DataInput[Obstruction two data input bottleneck]
+    Measurement[Obstruction three measurement bottleneck]
+    ControlFlow[Obstruction four control flow]
+    Quantum[Quantum algorithm]
 
-    CL --> O1
-    CL --> O2
-    CL --> O3
-    CL --> O4
-    O1 --> QA
-    O2 --> QA
-    O3 --> QA
-    O4 --> QA
+    Classical --> Unitarity
+    Classical --> DataInput
+    Classical --> Measurement
+    Classical --> ControlFlow
+    Unitarity --> Quantum
+    DataInput --> Quantum
+    Measurement --> Quantum
+    ControlFlow --> Quantum
 ```
 
 We treat each obstruction in turn.
@@ -665,20 +665,20 @@ And the data-flow view as a Mermaid diagram:
 
 ```mermaid
 flowchart LR
-    Tok["Token amplitude encoding ket h_t"]
-    Cre["Creation unitary U_cre theta"]
-    Reg["Register Trotter evolution exp minus i H_R t"]
-    Dis["Lindblad dissipator (single-photon loss)"]
-    Des["Destruction unitary U_des theta prime"]
-    Mea["Computational basis measurement"]
-    Logit["Next-token logits"]
+    TokenInput[Token amplitude encoding ket h t]
+    Creation[Creation unitary U cre theta]
+    Evolution[Register Trotter evolution]
+    Dissipation[Lindblad single photon loss]
+    Destruction[Destruction unitary U des theta prime]
+    Measure[Computational basis measurement]
+    Output[Next token logits]
 
-    Tok --> Cre
-    Cre --> Reg
-    Reg --> Dis
-    Dis --> Des
-    Des --> Mea
-    Mea --> Logit
+    TokenInput --> Creation
+    Creation --> Evolution
+    Evolution --> Dissipation
+    Dissipation --> Destruction
+    Destruction --> Measure
+    Measure --> Output
 ```
 
 The training loop is **variational**: a classical optimiser updates
@@ -963,16 +963,16 @@ is further graded by four sub-criteria:
 
 ```mermaid
 flowchart TB
-    QR["Quantum-readiness score"]
-    C1["Sub-criterion 1: unitarity of forward pass"]
-    C2["Sub-criterion 2: locality of interactions"]
-    C3["Sub-criterion 3: native bosonic structure"]
-    C4["Sub-criterion 4: expectation-value output"]
+    Score[Quantum readiness score]
+    Crit1[Sub criterion one unitarity of forward pass]
+    Crit2[Sub criterion two locality of interactions]
+    Crit3[Sub criterion three native bosonic structure]
+    Crit4[Sub criterion four expectation value output]
 
-    C1 --> QR
-    C2 --> QR
-    C3 --> QR
-    C4 --> QR
+    Crit1 --> Score
+    Crit2 --> Score
+    Crit3 --> Score
+    Crit4 --> Score
 ```
 
 A perfect (quantum-ready) architecture scores 4 out of 4. The scores
