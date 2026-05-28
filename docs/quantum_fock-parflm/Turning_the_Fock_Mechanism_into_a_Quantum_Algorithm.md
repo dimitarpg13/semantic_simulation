@@ -582,11 +582,9 @@ Between creation and destruction, the register sub-system evolves
 unitarily under a learnable Hamiltonian
 
 $$
-\hat{H}\_R(\theta) = \sum\_{k} \omega\_k(\theta) \hat{n}\_k
-+ \sum\_{k \lt k'} J\_{kk'}(\theta)
-\big( \hat{a}^{\dagger}\_k \hat{a}\_{k'} + \mathrm{h.c.} \big)
-+ \frac{1}{2} \sum\_{k} U\_k(\theta)
-\hat{n}\_k (\hat{n}\_k - 1) .
+\hat{H}\_R(\theta) = \sum\_{k} \omega\_k(\theta) \hat{n}\_k +
+\sum\_{k \lt k'} J\_{kk'}(\theta) \big( \hat{a}^{\dagger}\_k \hat{a}\_{k'} + \mathrm{h.c.} \big) +
+\frac{1}{2} \sum\_{k} U\_k(\theta) \hat{n}\_k (\hat{n}\_k - 1) .
 $$
 
 The first term is mode-energy; the second is mode-mixing
