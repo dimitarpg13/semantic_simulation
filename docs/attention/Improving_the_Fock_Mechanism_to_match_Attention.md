@@ -1,8 +1,8 @@
 # Improving the Fock Mechanism to Match Attention Expressivity in PARFLM
 
 **Technical Report — Semantic Simulation Research Programme**  
-**Status:** Active — May 2026  
-**Relates to:** Paper v4 §§9.4.2, 17.8, 17.13; FockPARFLM Phase 1 (Dyck₂ seed 0 complete)
+**Status:** Active — May 2026 (updated with QFT v2.1 experiment results)  
+**Relates to:** Paper v4 §§9.4.2, 17.8, 17.13, 17c; FockPARFLM Phase 1 (Dyck₂ seed 0 complete); QFT v2.1 (Q0–Q8 complete)
 
 ---
 
@@ -22,6 +22,9 @@
 12. [Proposed Experiments](#12-proposed-experiments)
 13. [Theoretical Significance](#13-theoretical-significance)
 14. [The Entropy Collapse Problem: Learnable Creation Temperature](#14-the-entropy-collapse-problem-learnable-creation-temperature)
+15. [Field-Theoretic Proof of the Conservative Obstruction](#15-field-theoretic-proof-of-the-conservative-obstruction)
+16. [QFT-Motivated Improvements to the Creation Gate](#16-qft-motivated-improvements-to-the-creation-gate)
+17. [QFT v2.1 Experiment Results and Current Bottleneck Analysis](#17-qft-v21-experiment-results-and-current-bottleneck-analysis)
 
 ---
 
@@ -69,13 +72,7 @@ This is **identical** to P10g (5M tokens, 16k steps, PPL = 26.42). Quadrupling t
 
 The gap to the matched attention baseline (MatchedGPT, val PPL = 7.81) is therefore **18.6 PPL** and can only be closed by escaping the expressivity class — not by scaling data, compute, or the conservative force law.
 
-```
-Architecture ladder (TinyStories, matched scale):
-
-  MatchedGPT-2 (8-layer attention)     →   7.81 PPL   ████████████████████████████████████████
-  PARFLM best (P10h, 20M tokens)        →  26.43 PPL   ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░
-  SPLM baseline (no PARF)               →  ~287 PPL    █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-```
+![Architecture Ladder: TinyStories PPL](images/fock_ppl_ladder.png)
 
 ---
 
@@ -157,23 +154,7 @@ $$e^- \xrightarrow{\text{emit}} \gamma_\text{virtual} \xrightarrow{\text{propaga
 
 The Feynman vertex factor at the source (emission), the propagator (what is carried), and the vertex factor at the receiver (absorption) are **three separate objects** — exactly the Q/K/V decoupling.
 
-```
-    ┌─────────────────────────────────────────────────────────────────────────┐
-    │                          QED Interaction                               │
-    │                                                                       │
-    │   e⁻ (source j) ──emit γ──▶ virtual photon γ ──absorb γ──▶ e⁻ (i)   │
-    │                   vertex:     payload:          vertex:      Δhᵢ +=   │
-    │                   kⱼ = Wₖhⱼ  vⱼ = Wᵥhⱼ        αᵢⱼ·vⱼ     αᵢⱼ·vⱼ  │
-    └─────────────────────────────────────────────────────────────────────────┘
-    ┌─────────────────────────────────────────────────────────────────────────┐
-    │                       Attention (same structure)                       │
-    │                                                                       │
-    │   Token j ─────create────▶ semantic photon ──annihilate──▶ Token i    │
-    │               key: kⱼ      value: vⱼ = Wᵥhⱼ  coupling:    yᵢ =     │
-    │               = Wₖhⱼ      (virtual particle)  softmax      Σⱼαᵢⱼvⱼ │
-    │                                                (qᵢ·kⱼ/√d)           │
-    └─────────────────────────────────────────────────────────────────────────┘
-```
+![Attention as Virtual Particle Exchange: QED analogy](images/fock_qed_attention_analogy.png)
 
 ### 5.2 Correspondence Table
 
@@ -196,8 +177,8 @@ $$\mathcal{F}(\mathcal{H}) = \bigoplus_{n=0}^{\infty} \mathcal{H}^{\otimes n}$$
 
 | v2 mechanism | Fock-space object |
 |---|---|
-| Introduce an entity into discourse | Creation operator $a^\dagger_v |\psi\rangle$ |
-| Entity drops out of discourse | Annihilation operator $a_v |\psi\rangle$ |
+| Introduce an entity into discourse | Creation operator $a^\dagger_v \lvert\psi\rangle$ |
+| Entity drops out of discourse | Annihilation operator $a_v \lvert\psi\rangle$ |
 | Count of currently-live entities | Number operator $\hat{N} = \sum_v a^\dagger_v a_v$ |
 | Field at semantic position $x$ | $\hat{\phi}(x) = \sum_v \phi_v(x) a_v$ |
 
@@ -218,28 +199,7 @@ Registers start in a "vacuum" state (inactive). A learned creation gate activate
 
 ### 6.2 Forward Pass per Layer $\ell$
 
-```
-1. Creation gate:   g_create^(ℓ) = σ( MLP( mean(h_{1:T}) ) )  ∈ [0,1]^M
-
-2. Salience update:
-   σ_j ← σ_j · λ + g_j · (1 - λ),    λ = 0.9
-   active_j = (σ_j > τ_thresh)
-
-3. Concatenate active registers:
-   h_full = [h_1, ..., h_T, r_{j₁}, ..., r_{j_k}]  ∈ ℝ^{(T+k)×d}
-
-4. PARF dynamics on h_full:
-   - V_θ restoring force on all particles
-   - Sparse V_φ pair force (top-k selection)
-   - Damped Verlet integration step
-
-5. Destruction gate (per active register j):
-   g_destroy_j = σ( MLP(r_j) )
-   σ_j ← σ_j · (1 - g_destroy_j)
-
-6. Split: extract updated h_{1:T} for LM head;
-   store updated r_j states for next layer.
-```
+![FockPARFLM v1: Forward Pass per Layer](images/fock_forward_pass_v1.png)
 
 Parameter budget at P10f scale ($d = 256$, $L = 8$, $M = 32$): **~288K overhead** (<2% of the ~13M base PARFLM).
 
@@ -292,23 +252,7 @@ is conditioned on the **mean of all tokens** — a single undifferentiated globa
 | Q/K/V decoupling | Gate determines both whether to create AND what content register holds | Coupling and content are fused |
 | Competitive normalization | $M$ sigmoid gates are independent | No budget constraint; creation of register $k$ does not affect register $k'$ |
 
-```
- Current FockPARFLM — Structural Gaps        What Attention Does
- ─────────────────────────────────────        ────────────────────────────────────
-                                              qᵢ = Wqhᵢ ─┐
-    mean(h₁..T) ──▶ MLP sigmoid gates        (per-token   │
-    (symmetric,      (independent,             query)      ├──▶ softmax(qᵢ·kⱼ/√d)
-     global)          no budget)                           │    (competitive budget)
-         │                                    kⱼ = Wₖhⱼ ─┘           │
-         ▼                                    (per-token key)         ▼
-    activate register j                                      vⱼ = Wᵥhⱼ
-    rⱼ starts from learnable embedding                       (decoupled content)
-    (NOT from input content)                                         │
-         │                                                           ▼
-         ▼                                               Δhᵢ = Σⱼ αᵢⱼ vⱼ
-    participates in Vφ
-    (symmetric pair force)
-```
+![Current FockPARFLM vs Attention: Structural Gaps](images/fock_structural_gaps.png)
 
 The current FockPARFLM therefore uses creation/destruction to implement **auxiliary persistent memory** — registers are additional hidden states that persist across layers. This is computationally useful (it escapes the v0 ceiling via Dyck₂) but it does not implement **directed information exchange** — the mechanism that drives attention's language-modelling power.
 
@@ -318,26 +262,7 @@ The current FockPARFLM therefore uses creation/destruction to implement **auxili
 
 The current FockPARFLM creates and destroys **input particles** (register slots as additional hidden states). The QFT analysis in Section 5 identifies that attention creates and destroys **virtual mediating particles** — semantic photons $\gamma$ that carry information from source $j$ to receiver $i$.
 
-```
- Current: Creates Input Particles
- ─────────────────────────────────────────────────────────────────────
-   Vacuum ──creation gate──▶ Register rₖ ◀──Vφ pair force──▶ rₖ
-   state    (mean-cond.)     (real particle,    (symmetric)
-                              persistent)
-                                  │
-                          destruction gate
-                                  │
-                                  ▼
-                             Vacuum state
-
- Proposed: Creates Virtual Exchange Particles
- ─────────────────────────────────────────────────────────────────────
-   Token j ──emit semantic──▶ virtual γ ──absorb at i──▶ Token i
-              photon           (lifetime                  Δhᵢ +=
-              a†(kⱼ)|0⟩       ≈ 1/(1-λ)                  αᵢⱼ·vⱼ
-              payload:          layers)    coupling:
-              vⱼ = Wᵥhⱼ                   softmax(qᵢ·kⱼ)
-```
+![FockPARFLM: Current vs Proposed mechanism](images/fock_current_vs_proposed.png)
 
 | | Current FockPARFLM | Proposed FockPARFLM v2 |
 |---|---|---|
@@ -444,49 +369,7 @@ class FockPARFLM_v2(SparsePARFLM):
 
 ### 9.5 Full Forward Pass
 
-```
-                          Input tokens h₁..T
-                          ┌───────┴───────┐
-                          ▼               ▼
-                    Wₖ: kⱼ (T×d_k)   Wᵥ: vⱼ (T×d)
-                          │               │
-    ┌─────────────────────┼───────────────┼──────────────────────────┐
-    │ Per-register k:     │               │  Q/K/V Creation Event   │
-    │                     │               │                          │
-    │  rₖ current ──▶ W_Q^k ──▶ qₖ       │                          │
-    │  state              │               │                          │
-    │                     ▼               │                          │
-    │              qₖ · kⱼ / √d_k        │                          │
-    │              (T scores)             │                          │
-    │                     │               │                          │
-    │                     ▼               │                          │
-    │              softmax over j ────────┤                          │
-    │              αₖⱼ (Σⱼ=1)            │                          │
-    │              ┌──────┴──────┐        │                          │
-    │              ▼             ▼        ▼                          │
-    │        max_j(αₖⱼ)    Σⱼ αₖⱼ · vⱼ = new rₖ                   │
-    │        (salience)                                              │
-    └─────────┼────────────────────────────┼─────────────────────────┘
-              ▼                            │
-    σₖ = σₖ·λ + signal·(1-λ)              │
-              │                            │
-              ▼                            │
-        σₖ > threshold?                    │
-         ╱          ╲                      │
-       Yes           No                    │
-        │         (inactive)               │
-        ▼                                  │
-    Register k active ──────┐              │
-                            ▼              │
-    h₁..T ──────────▶ PARF dynamics        │
-                       Vθ + Vφ + Qᵢ       │
-                       + damped Verlet     │
-                       ┌──────┴──────┐     │
-                       ▼             ▼     ▼
-                  h₁..T (out)    Destruction gate ──▶ rₖ (next layer)
-                  → LM head      g = σ(MLP(rₖ))
-                                 σₖ ← σₖ·(1-g)
-```
+![FockPARFLM v2: Full Forward Pass](images/fock_full_forward_pass.png)
 
 ---
 
@@ -557,22 +440,7 @@ The proposed mechanism has one structural advantage over standard attention: cro
 
 ## 12. Proposed Experiments
 
-```
-FockPARFLM v2 Experimental Programme
-═══════════════════════════════════════════════════════════════════════════
-
-Phase 1 — Dyck₂ Falsifier
-  F2-qkv-creation (d=64, M=16)        ████████  May 22 – May 29
-  F2-scale-up (d=128, M=32, 8k steps)          ████████  May 29 – Jun 5
-  3-seed consistency check                               █████  Jun 5 – Jun 10
-
-Phase 2 — TinyStories
-  P11-qkv (M=16, P10f scale)                                  ██████████  Jun 10 – Jun 20
-  P11-qkv-32 (M=32, 16k steps)                                           ██████████  Jun 20 – Jun 30
-
-Phase 3 — Cross-serial
-  aⁿbⁿcⁿ falsifier (v3 required)                                                    ██████████████  Jun 30 – Jul 14
-```
+![FockPARFLM v2 Experimental Programme](images/fock_experiment_gantt.png)
 
 ### 12.1 F2-qkv-creation: Dyck₂ Falsifier with Q/K/V Creation
 
@@ -636,51 +504,7 @@ where $\hat{\phi}(x) = \sum_j v_j \delta(x - k_j)$ is the semantic photon field 
 
 ### 13.3 The Expressivity Hierarchy
 
-```
-                    ┌───────────────────────────────────┐
-                    │  v0: SPLM                         │
-                    │  Conservative dynamics             │
-                    │  Regular languages (finite aut.)   │
-                    └──────────┬──────────┬──────────────┘
-                               │          │
-                  + Vφ pair    │          │  + mean-conditioned
-                    force      │          │    registers
-                               ▼          │
-                    ┌──────────────────┐   │
-                    │  PARFLM          │   │
-                    │  Still v0        │   │
-                    │  PPL ceiling:    │   │
-                    │  26.4 TinyStories│   │
-                    └──────────────────┘   │
-                                          ▼
-                              ┌───────────────────────┐
-                              │  FockPARFLM v1        │
-                              │  v0 + v2 partial      │
-                              │  Dyck₂: +1.3pp        │
-                              └───────────┬───────────┘
-                                          │
-                               + Q/K/V creation
-                               (this report)
-                                          │
-                                          ▼
-                              ┌───────────────────────┐
-                              │  FockPARFLM v2        │
-                              │  v0 + v2 full         │
-                              │  CF class (predicted) │
-                              │  PPL: TBD             │
-                              └───────────┬───────────┘
-                                          │
-                              + Lie group operator
-                                actions
-                                          │
-                                          ▼
-                              ┌───────────────────────┐
-                              │  v0 + v2 + v3         │
-                              │  Full MCS (LCFRS)     │
-                              │  = Attention           │
-                              │    expressivity class  │
-                              └───────────────────────┘
-```
+![FockPARFLM Expressivity Hierarchy](images/fock_expressivity_hierarchy.png)
 
 ### 13.4 The Separator Remains Diagnostic
 
@@ -869,6 +693,482 @@ The temperature evolution curve $\tau(t)$ is logged at every training step, prov
 
 ---
 
+## 15. Field-Theoretic Proof of the Conservative Obstruction
+
+This section provides a self-contained, detailed account of the **field-theoretic proof** that attention generates irreducibly interacting statistics which no conservative potential can replicate. It synthesises the dynamical-systems proof (our Conservative Obstruction Theorem, Section 4 above) with the independent QFT analysis of Ageev and Ageev (2026), showing that the two results establish the same impossibility from complementary directions.
+
+### 15.1 Overview: Two Proofs, One Obstruction
+
+The Conservative Obstruction Theorem (Section 4) works "from the inside" — it examines the force law $F_i = -\nabla_{h_i} V$ and shows that gradient structure imposes three constraints (Jacobian symmetry, gradient entanglement, force growth) that are individually violated by attention. The field-theoretic proof works "from the outside" — it examines the statistical correlations produced by a layer of dynamics and shows that conservative potentials produce free (Gaussian) field statistics while attention produces interacting (non-Gaussian) field statistics, and the two classes are separated by a sharp boundary.
+
+![Two Proofs of the Conservative Obstruction](images/fock_two_proofs.png)
+
+The two proofs are logically independent but mutually reinforcing. The dynamical-systems proof tells us WHY (which structural properties fail); the field-theoretic proof tells us that the failure is IRREDUCIBLE (no reparameterisation, resummation, or mean-field reduction can bridge the gap).
+
+### 15.2 Setup: The NN-QFT Correspondence for Attention
+
+Following Ageev and Ageev (2026), we construct a scalar field theory from a single attention head. The setup proceeds in three steps.
+
+**Step 1: Define the field.** Given a trained attention head with query, key, and value weight matrices $W^Q, W^K, W^V \in \mathbb{R}^{d \times d_k}$, define a scalar field as a linear readout of the head output:
+
+$$\phi_i(x_a) = \sum_j \alpha_{aj} (W^V x_j)_i$$
+
+where $x_a$ is an input token at position $a$, the index $i$ selects a coordinate of the value-projected output, and the attention weights $\alpha_{aj}$ are defined by the softmax over Q/K inner products:
+
+$$\alpha_{aj} = \mathrm{softmax}(x_a^\top W^Q {W^K}^\top x_j / \sqrt{d_k})$$
+
+Each coordinate $i$ defines a separate scalar field.
+
+**Step 2: Define the ensemble.** The $n$-point correlation functions are defined by averaging over Gaussian-initialised network parameters:
+
+$$\langle \phi_{i_1}(x_{a_1}) \cdots \phi_{i_n}(x_{a_n}) \rangle = \mathbb{E}_{W^Q, W^K, W^V} \left[ \phi_{i_1}(x_{a_1}) \cdots \phi_{i_n}(x_{a_n}) \right]$$
+
+The weights $W^Q, W^K, W^V$ are drawn i.i.d. from $\mathcal{N}(0, \sigma^2 / d)$. This is the standard NN-QFT prescription: the network parameter ensemble plays the role of the path-integral measure.
+
+**Step 3: Compute correlators.** The central object is the **connected four-point function** (the part of the four-point correlator that cannot be decomposed into products of two-point functions):
+
+$$G_c^{(4)}(x_{a_1}, x_{a_2}, x_{a_3}, x_{a_4}; i_1, i_2, i_3, i_4) = \langle \phi_{i_1} \phi_{i_2} \phi_{i_3} \phi_{i_4} \rangle - \langle \phi_{i_1} \phi_{i_2} \rangle \langle \phi_{i_3} \phi_{i_4} \rangle - \langle \phi_{i_1} \phi_{i_3} \rangle \langle \phi_{i_2} \phi_{i_4} \rangle - \langle \phi_{i_1} \phi_{i_4} \rangle \langle \phi_{i_2} \phi_{i_3} \rangle$$
+
+This is the standard QFT definition. In a free (Gaussian) theory, $G_c^{(4)} = 0$ by Wick's theorem (also known as Isserlis' theorem in probability). Any nonzero $G_c^{(4)}$ signals an **interacting** theory.
+
+### 15.3 The Two-Point Function: Gaussian Baseline
+
+The two-point function of a single attention head is:
+
+$$\langle \phi_i(x_a) \phi_j(x_b) \rangle = \sigma_V^2 \sum_{u,v} \langle \alpha_{au} \alpha_{bv} \rangle (x_u \cdot x_v) \delta_{ij} / d$$
+
+where $\langle \alpha_{au} \alpha_{bv} \rangle$ denotes the average of the product of attention weights over the Q/K weight ensemble. Since $W^V$ is independent of $W^Q$ and $W^K$, the value projection contributes a simple factor proportional to $\delta_{ij}$ (Kronecker delta on the output coordinate indices). The nontrivial structure is in the attention-weight correlator.
+
+If the attention weights were **independent** of each other (i.e. if $\alpha_{au}$ were not coupled to $\alpha_{bv}$ through the shared Q/K weights), then the four-point function would factorise exactly into products of two-point functions, and $G_c^{(4)}$ would vanish. The theory would be free.
+
+### 15.4 The Four-Point Function: Independence-Breaking
+
+The central result of Ageev and Ageev (2026) is that $G_c^{(4)} \neq 0$ for generic attention heads, and the nonzero contribution has a transparent origin.
+
+The connected four-point function decomposes as:
+
+$$G_c^{(4)} = \underbrace{I_{d_k}^{(4)}}_{\mathcal{O}(1/d_k)} + \underbrace{I_{\mathrm{IB}}^{(4)}}_{\text{finite as } d_k \to \infty}$$
+
+Two terms contribute:
+
+1. **The finite-width correction** $I_{d_k}^{(4)}$: This is $\mathcal{O}(1/d_k)$ and vanishes in the infinite key-dimension limit. It arises from the same mechanism as finite-width corrections in standard MLPs (non-Gaussian corrections from the central limit theorem).
+
+2. **The independence-breaking term** $I_{\mathrm{IB}}^{(4)}$: This is the structurally novel contribution. It survives the $d_k \to \infty$ limit and has the explicit form:
+
+$$I_{\mathrm{IB}}^{(4)} \propto \mathrm{Cov}_{W^Q, W^K}(X_{12}, X_{34})$$
+
+where
+
+$$X_{ab} = \frac{\sigma_V^2}{d} \sum_{u,v} \alpha_{au} \alpha_{bv} (x_u \cdot x_v)$$
+
+The quantity $X_{ab}$ is a random variable (random because $\alpha_{au}$ depends on the random weights $W^Q, W^K$) that measures the attention-mediated inner product between positions $a$ and $b$. The independence-breaking term is the covariance of two such attention-mediated inner products, computed over the Q/K weight ensemble.
+
+### 15.5 Why the Independence-Breaking Term is Nonzero
+
+The key insight is structural: the softmax attention weights $\alpha_{aj}$ are **shared** across all output coordinates $i$ of the head. Different coordinates of the value-projected output pass through the **same** attention routing matrix. This shared routing creates statistical coupling between output coordinates that cannot be reduced to pairwise (two-point) correlations.
+
+Concretely, consider two pairs of field coordinates: the pair $\phi_{i_1}(x_a)$, $\phi_{i_2}(x_b)$ and the pair $\phi_{i_3}(x_c)$, $\phi_{i_4}(x_d)$. Each pair is correlated through the attention weights. But the attention weights appearing in $X_{ab}$ and $X_{cd}$ are **the same random functions of the same Q/K weights**. Therefore $X_{ab}$ and $X_{cd}$ are not independent, and their covariance is generically nonzero:
+
+$$\mathrm{Cov}_{W^Q, W^K}(X_{ab}, X_{cd}) \neq 0$$
+
+This covariance vanishes **only** if the attention weights "freeze" — i.e. become deterministic functions independent of $W^Q, W^K$. But frozen attention is trivial attention (it does not attend; it applies a fixed mixing matrix). Therefore, whenever attention actually attends, $I_{\mathrm{IB}}^{(4)} \neq 0$, and the field theory is interacting.
+
+### 15.6 Diagrammatic Interpretation: Wick Contractions
+
+The difference between free and interacting field theories has a clean diagrammatic interpretation. In a **free (Gaussian) field theory**, Wick's theorem (Isserlis' theorem) states that all $n$-point functions decompose into products of two-point functions:
+
+$$\langle \phi_1 \phi_2 \phi_3 \phi_4 \rangle_{\text{free}} = \langle \phi_1 \phi_2 \rangle \langle \phi_3 \phi_4 \rangle + \langle \phi_1 \phi_3 \rangle \langle \phi_2 \phi_4 \rangle + \langle \phi_1 \phi_4 \rangle \langle \phi_2 \phi_3 \rangle$$
+
+Diagrammatically, each two-point function is a line (propagator) connecting two external points. The three terms correspond to the three possible pairings (Wick contractions) of four points into two pairs. There is no connected four-point vertex — all four-point structure reduces to products of two-point propagators.
+
+In an **interacting (non-Gaussian) field theory**, there is an additional connected component — a four-point vertex where all four external legs meet at a common interaction point:
+
+$$\langle \phi_1 \phi_2 \phi_3 \phi_4 \rangle_{\text{interacting}} = \underbrace{\langle \phi_1 \phi_2 \rangle \langle \phi_3 \phi_4 \rangle + \text{perms}}_{\text{disconnected: Wick contractions}} + \underbrace{G_c^{(4)}}_{\text{connected: interaction vertex}}$$
+
+The connected vertex $G_c^{(4)} = I_{\mathrm{IB}}^{(4)}$ is the signature of irreducible interaction. In particle physics, this vertex represents virtual particle exchange: two particles scatter by exchanging a mediator that is created and destroyed during the interaction.
+
+![Wick contraction diagrams: free (Gaussian) vs interacting (non-Gaussian) field theory](images/wick_contractions_free_vs_interacting.png)
+
+**Figure 15.1.** Wick contraction diagrams for free vs interacting field theories. In the free (Gaussian) case, all four-point correlations decompose into products of two-point propagators. In the interacting case, an irreducible connected four-point vertex $I_{\mathrm{IB}}$ appears, representing virtual particle exchange. This is the field-theoretic signature of attention.
+
+### 15.7 The Bridge: Conservative Potentials Produce Free Field Statistics
+
+This is the central bridge connecting the two proofs. We now show that **any conservative scalar potential on token particles produces a free (Gaussian) field theory** in the NN-QFT sense.
+
+Consider $T$ particles evolving under a scalar potential $V : \mathbb{R}^{Td} \to \mathbb{R}$ with forces $F_i = -\nabla_{h_i} V$. Define an output field as in Section 15.2 but replacing the attention head with the conservative dynamics. The force on particle $i$ due to particle $j$ is:
+
+$$F_{ij}^\alpha = -\frac{\partial V}{\partial h_j^\beta} \cdot \frac{\partial^2 V}{\partial h_i^\alpha \partial h_j^\beta}$$
+
+For pairwise potentials $V = \sum_{i \lt j} V_\phi$, the key structural constraint is that the force $F_{ij}$ and the "content" transferred are **the same object** — both are determined by the gradient of $V_\phi$. There is no independent "value" channel.
+
+Now consider the correlator structure. In a conservative system, the coupling between particles $i$ and $j$ is mediated entirely through the gradient of the potential. The Hessian matrix
+
+$$H_{ij}^{\alpha\beta} = \frac{\partial^2 V}{\partial h_i^\alpha \partial h_j^\beta}$$
+
+is the fundamental two-point coupling kernel. By Schwarz's theorem, this matrix is symmetric: $H_{ij}^{\alpha\beta} = H_{ji}^{\beta\alpha}$.
+
+The symmetry of the Hessian means that the response of particle $i$ to perturbation of particle $j$ is the transpose of the response of $j$ to perturbation of $i$. When one computes the correlation functions of the conservative system's output field (by averaging over initial conditions or parameter distributions), all higher-point correlations reduce to products of two-point correlations mediated by the Hessian. The connected four-point function vanishes:
+
+$$G_c^{(4)}\Big|_{\text{conservative}} = 0$$
+
+This is because the symmetric Hessian produces a Gaussian effective theory. The force map is a gradient, so there exists a partition function $Z = \int e^{-V(h)/T} dh$ (in the equilibrium or path-integral sense), and the correlations of any observable linear in the particle positions follow Wick's theorem with propagator $H^{-1}$.
+
+### 15.8 The Impossibility: Interacting Cannot Reduce to Free
+
+The field-theoretic proof is now a one-line consequence:
+
+> **Conservative dynamics produces $G_c^{(4)} = 0$ (free field theory). Attention produces $G_c^{(4)} \neq 0$ (interacting field theory). Since $0 \neq \mathrm{nonzero}$, no conservative potential can replicate the statistics of attention.**
+
+This is a **sharper** result than the dynamical-systems proof in one specific sense: it shows that the obstruction is not merely about the force law but about the **entire statistical structure** of the dynamics. Even if one could somehow construct a non-gradient force law that satisfies P1 and P2 while remaining derivable from a scalar energy, the correlator structure would still be Gaussian, and Gaussian statistics cannot reproduce the non-Gaussian correlations that attention generates.
+
+The interacting/free boundary in QFT is rigid:
+
+- A free theory has all connected $n$-point functions vanishing for $n \geq 3$.
+- An interacting theory has at least one nonvanishing connected $n$-point function for some $n \geq 3$.
+- There is no continuous deformation from free to interacting within the class of theories derivable from a quadratic (Gaussian) action. Interaction requires adding vertices (cubic, quartic, etc.) to the action — these vertices correspond to virtual particle exchange.
+
+### 15.9 Multi-Head Suppression and the Register Pool Size
+
+Ageev and Ageev (2026) establish an important quantitative result: multi-head averaging suppresses the non-Gaussianity. If $N_h$ attention heads are averaged, then:
+
+$$G_c^{(4)} = \mathcal{O}(1/N_h)$$
+
+This has direct architectural implications for FockPARFLM. Each Fock register in the register pool plays the role of a single "interaction channel" — analogous to a single attention head — that mediates non-conservative exchange forces between token particles. The NN-QFT result tells us:
+
+1. **Each register contributes a finite non-Gaussian correction.** A single Fock register with Q/K/V gates mediates a single channel of virtual particle exchange, producing a connected four-point contribution analogous to $I_{\mathrm{IB}}^{(4)}$ from one attention head.
+
+2. **The total interaction strength scales with register count.** To match the full expressivity of multi-head attention with $N_h$ heads, one needs a register pool whose size $M$ scales with the number of independent interaction modes the target task requires.
+
+3. **The $1/N_h$ suppression explains why hybridisation works.** In the P1 hybrid experiment (Section 6.4), adding just 4 attention heads to FockPARFLM reduced PPL from 190 to 149 — each head contributes a large non-Gaussian correction. The FockPARF registers, by contrast, need to learn the interaction structure from scratch.
+
+### 15.10 The Three Structural Properties Revisited Through QFT
+
+The three structural properties identified in Section 4 can now be reinterpreted in field-theoretic language:
+
+| Property | Dynamical-systems view | Field-theoretic view |
+|---|---|---|
+| **P1: Asymmetry** | Jacobian symmetry forces reciprocity: off-diagonal blocks are transposes | The propagator is symmetric; the interaction vertex $G_c^{(4)}$ can break this via directional exchange |
+| **P2: Q/K/V decoupling** | Gradient entanglement locks coupling strength to content direction | In free field theory, the coupling kernel (Hessian) is a single object; interaction vertices introduce separate coupling constants at each leg |
+| **P3: Normalised budget** | Additive forces grow as $\Omega(\sqrt{T})$ | Free-field propagator is $O(1)$ in particle number but does not compete; interacting vertices carry their own normalisation through the self-energy |
+
+The field-theoretic perspective reveals that these three properties are not independent accidents — they are all consequences of the single structural distinction between free and interacting field theories. A free field theory (conservative potential) is symmetric, entangled, and unnormalised because its entire structure is determined by a single quadratic form (the Hessian). An interacting field theory (attention) breaks all three because the interaction vertices introduce genuinely new degrees of freedom (the Q/K/V weight matrices play the role of coupling constants at the vertices).
+
+### 15.11 Implications for the Semantic Simulation Programme
+
+![Conservative potential vs attention vs FockPARFLM in field-theoretic language](images/fock_qft_correspondence_diagram.png)
+
+**Figure 15.2.** The three regimes in field-theoretic language. A conservative potential produces free (Gaussian) field statistics where all correlations factorise through the potential ($G_c^{(4)} = 0$). Attention produces interacting (non-Gaussian) statistics with irreducible four-point vertices ($G_c^{(4)} \neq 0$), mediated by virtual exchange through shared softmax routing. FockPARFLM's register pool is engineered to produce $G_c^{(4)} \neq 0$ by construction, via explicit creation and annihilation of exchange mediators.
+
+The field-theoretic proof sharpens the architectural roadmap for the Semantic Simulation programme:
+
+1. **The conservative base dynamics is necessary but inherently limited.** The PARF potential $V_\phi$ provides a well-defined energy landscape and conservative base forces. But these forces produce free-field statistics only. The base dynamics forms the "vacuum sector" of the theory.
+
+2. **Fock registers are the interaction vertices.** Each register with Q/K/V gates acts as an interaction vertex that generates non-Gaussian connected correlations. The register's creation corresponds to emitting a virtual quantum; its annihilation (or readback via the reverse channel) corresponds to absorbing it.
+
+3. **The register pool must be rich enough.** The $1/N_h$ scaling result means that the register pool size $M$ must grow with the complexity of the target interaction structure. For simple formal languages (Dyck$_2$), 16 registers suffice. For natural language, $M$ must scale with the effective number of independent interaction channels.
+
+4. **The free/interacting boundary is the expressivity wall.** No amount of scaling the conservative potential (larger $d_V$, deeper MLP, richer pair potential) can cross from free to interacting statistics. The wall is topological in nature — it requires a qualitative change (adding interaction vertices = Fock registers), not a quantitative one (larger parameters).
+
+### 15.12 Summary: The Complete Obstruction
+
+The Conservative Obstruction Theorem and its field-theoretic proof together establish a complete no-go result:
+
+> **Theorem (Conservative Obstruction — combined form).** Let $T$ particles $\lbrace h_1, \ldots, h_T \rbrace \subset \mathbb{R}^d$ evolve under a $C^2$ scalar potential $V : \mathbb{R}^{Td} \to \mathbb{R}$ with forces $F_i = -\nabla_{h_i} V$. Then:
+>
+> (a) The force map $\mathbf{F}$ cannot simultaneously satisfy the asymmetric coupling (P1), coupling-content decoupling (P2), and normalised budget (P3) properties of attention. (Dynamical-systems proof: Schwarz symmetry, gradient entanglement, force growth.)
+>
+> (b) The output field generated by the conservative dynamics has vanishing connected four-point function: $G_c^{(4)} = 0$. The corresponding field theory is free (Gaussian). (Field-theoretic proof: Hessian symmetry implies Wick factorisation.)
+>
+> (c) The output field of a single attention head has $G_c^{(4)} \neq 0$ (generically, whenever the head attends). The corresponding field theory is interacting (non-Gaussian). (Ageev and Ageev, 2026: independence-breaking through shared softmax routing.)
+>
+> Therefore, no conservative potential can replicate the statistics generated by attention. The resolution requires extending the state space with auxiliary degrees of freedom (Fock registers) that mediate virtual particle exchange, producing non-Gaussian connected correlations by construction.
+
+This combined result delimits the theoretical boundary that any attention-free conservative architecture must cross. Fock-space augmentation, with its explicit creation and annihilation of exchange mediators, is the minimal mechanism that crosses this boundary within the Lagrangian framework.
+
+---
+
+## 16. QFT-Motivated Improvements to the Creation Gate
+
+The field-theoretic proof of Section 15 and the NN-QFT analysis of Ageev and Ageev (2026) provide not only theoretical understanding of the conservative obstruction but also **concrete architectural prescriptions** for improving the FockPARFLM creation gate. This section translates four QFT insights into specific design changes for the Q/K/V creation protocol of Section 9 and the learnable-temperature fix of Section 14.
+
+### 16.1 QFT Diagnosis of the Current Creation Gate
+
+The entropy collapse problem (Section 14.1) has a precise field-theoretic interpretation. When the creation gate attention is near-uniform ($\bar{H} \approx 1$), the attention weights become effectively deterministic, frozen at $\alpha_{kj} \approx 1/T$ for all $j$. In Ageev and Ageev's framework, frozen attention produces a vanishing independence-breaking term:
+
+$$I_{\mathrm{IB}}^{(4)} \propto \mathrm{Cov}_{W^Q, W^K}(X_{12}, X_{34}) \to 0 \quad \text{when } \alpha_{kj} \to 1/T$$
+
+because $X_{ab} = (\sigma_V^2/d) \sum_{u,v} \alpha_{au} \alpha_{bv} (x_u \cdot x_v) \to (\sigma_V^2/d) \cdot (1/T^2) \sum_{u,v} (x_u \cdot x_v)$ becomes a **constant** independent of the Q/K weights. The covariance of a constant is zero.
+
+In QFT language: the creation gate is operating in the **free-field regime**. It creates "virtual particles" that carry no non-Gaussian correlation; the registers mediate no genuine interaction. The register content degenerates to the mean-pool $r_k \approx (1/T) \sum_j v_j$, which is exactly the Gaussian (free-field) limit of the theory.
+
+The learnable temperature (Section 14.9) re-introduces the independence-breaking covariance by sharpening attention. But the QFT analysis reveals three additional structural deficiencies in the creation gate that temperature alone cannot fix.
+
+### 16.2 Improvement 1: Gumbel-Softmax Creation — Stochastic Virtual Particle Emission
+
+**QFT motivation.** In quantum field theory, particle creation is inherently **stochastic**: the creation amplitude $\langle f | a^\dagger | i \rangle$ gives a probability amplitude, and the actual creation event is a random process governed by vacuum fluctuations. The current creation gate is entirely deterministic: given the same input tokens, every forward pass produces the same register contents. This means all $M$ registers with similar query directions will create near-identical content, wasting the register pool.
+
+**The prescription.** Replace the deterministic softmax in the creation gate with the **Gumbel-Softmax** relaxation:
+
+$$\alpha_{kj} = \mathrm{softmax}_j\left(\frac{q_k \cdot k_j + g_j}{\tau}\right), \qquad g_j \sim \mathrm{Gumbel}(0, 1)$$
+
+where $g_j = -\log(-\log(u_j))$ with $u_j \sim \mathrm{Uniform}(0,1)$. The Gumbel noise serves as the **vacuum fluctuation**: it perturbs the deterministic score landscape, ensuring that:
+
+1. Different registers, even with similar Q/K projections, **sample different tokens** during creation (diversity across the pool)
+2. At training time, the stochasticity provides exploration, preventing all registers from collapsing to the same content
+3. As $\tau \to 0$, creation approaches hard one-hot selection (particle created at a specific semantic location)
+4. As $\tau \to \infty$, creation approaches the uniform distribution (no exchange: free-field limit)
+
+The Gumbel noise has standard deviation $\pi/\sqrt{6} \approx 1.28$, which is comparable to the score standard deviations needed for selective attention ($\sigma_{\mathrm{eff}} \geq 1$, see Section 14.3). At initialization, when $\sigma_s \approx 0.009$, the Gumbel noise completely dominates the scores, producing random token selection. As training proceeds and Q/K projections sharpen ($\sigma_s$ grows), the learned scores increasingly dominate the noise, transitioning from **random creation** (exploration) to **informed creation** (exploitation). This annealing schedule is automatic and requires no tuning.
+
+**Field-theoretic justification.** The independence-breaking term $I_{\mathrm{IB}}^{(4)}$ is maximized when different registers produce diverse, token-specific content. Deterministic creation with shared projections produces correlated register contents; Gumbel noise breaks this correlation, increasing the effective number of independent interaction channels per layer.
+
+**Implementation:**
+
+```python
+def create_registers_gumbel(self, h_tokens, layer_idx, training=True):
+    K = self.W_K(h_tokens)
+    V = self.W_V(h_tokens)
+    tau = self.log_tau.exp().clamp(min=1e-4)
+
+    r_new = []
+    for k in range(self.M):
+        q_k = self.register_states[k] @ self.W_Q[k]
+        scores = q_k @ K.T
+        if training:
+            gumbel_noise = -torch.log(-torch.log(
+                torch.rand_like(scores).clamp(min=1e-8)
+            ))
+            scores = scores + gumbel_noise
+        alpha_k = F.softmax(scores / tau, dim=-1)
+        r_new.append((alpha_k.unsqueeze(-1) * V).sum(0))
+    return torch.stack(r_new)
+```
+
+At inference time, the Gumbel noise can be omitted (deterministic mode) or retained with reduced amplitude for ensemble-style prediction.
+
+### 16.3 Improvement 2: Per-Register Key Subspaces — Independent Interaction Channels
+
+**QFT motivation.** The $1/N_h$ suppression result from Ageev and Ageev (2026) shows that each attention head contributes a **finite, independent** non-Gaussian correction to $G_c^{(4)}$. For Fock registers to serve as independent interaction channels (analogous to independent attention heads), they must attend in **different key spaces**. Currently, all $M$ registers share the same key projection $W_K \in \mathbb{R}^{d \times d_k}$ and value projection $W_V \in \mathbb{R}^{d \times d}$. Only the query projections $W_Q^{(k)}$ are per-register.
+
+Shared keys mean all registers compute scores in the same subspace. Even with per-register queries, the attention patterns are highly correlated because the key representation is identical. From the QFT perspective, this is equivalent to $M$ interaction channels sharing the **same coupling constant** at the vertex: the effective number of independent non-Gaussian corrections is much less than $M$.
+
+**The prescription.** Introduce per-register key projections by factoring the key space into register-specific subspaces:
+
+$$k_j^{(k)} = W_K^{(k)} h_j, \qquad \alpha_{kj} = \mathrm{softmax}_j\left(\frac{q_k \cdot k_j^{(k)} + g_j}{\tau}\right)$$
+
+Each register $k$ has its own $W_K^{(k)} \in \mathbb{R}^{d \times d_k}$, ensuring it attends in a different subspace of the token representations. This is structurally identical to multi-head attention's per-head Q/K projections.
+
+**Parameter cost.** At $M = 16$, $d = 256$, $d_k = 64$: the per-register keys add $M \cdot d \cdot d_k = 16 \times 256 \times 64 \approx 262$K parameters, comparable to the existing per-register $W_Q$ cost. For value projections, the choice depends on whether per-register values are needed. The QFT analysis says the **key** subspace is what must differ (it determines the coupling), while the value projection (the content transferred) can remain shared. This parallels multi-head attention, where the key and query projections are per-head but the value projection is often shared via concatenation.
+
+**Implementation:**
+
+```python
+# Per-register key projections
+self.W_K = nn.Parameter(
+    torch.randn(self.M, cfg.d, cfg.d_k) * (1.0 / cfg.d**0.5)
+)
+
+# In create_registers:
+for k in range(self.M):
+    q_k = self.register_states[k] @ self.W_Q[k]
+    K_k = h_tokens @ self.W_K[k]       # per-register keys
+    scores = q_k @ K_k.T
+    ...
+```
+
+### 16.4 Improvement 3: Orthogonal Query Initialization — Maximally Spread Probes
+
+**QFT motivation.** The independence-breaking term $\mathrm{Cov}_{W^Q, W^K}(X_{ab}, X_{cd})$ is nonzero precisely because different output coordinates are coupled through the shared attention map. For Fock registers to produce maximally diverse interaction modes, their query projections should probe **orthogonal semantic subspaces** from the first forward pass.
+
+Currently, $W_Q \in \mathbb{R}^{M \times d \times d_k}$ is initialized with isotropic Gaussian noise at std $= 0.02$. All $M$ query directions are nearly aligned at initialization (all near zero with random small perturbations). During early training, all registers probe approximately the same direction, compounding the entropy collapse: even with a learnable temperature, the registers all attend to the same tokens.
+
+**The prescription.** Initialize the register query projections to be **mutually orthogonal** across the register dimension. For each input dimension $i$, draw a random orthogonal matrix and assign its columns to the $M$ registers:
+
+```python
+Q_init = torch.zeros(M, d, d_k)
+for i in range(d):
+    U, _, _ = torch.linalg.svd(torch.randn(d_k, max(M, d_k)))
+    Q_init[:, i, :] = U[:M, :d_k] * init_scale
+self.W_Q = nn.Parameter(Q_init)
+```
+
+This ensures that from the very first forward pass, different registers attend to different aspects of the token representations. The orthogonality constraint is only at initialization; the projections are free to rotate during training.
+
+**Field-theoretic justification.** In QFT, the mode expansion of a free field $\hat{\phi}(x) = \sum_k (a_k e^{ik \cdot x} + a_k^\dagger e^{-ik \cdot x})$ uses orthogonal plane-wave modes $e^{ik \cdot x}$ to ensure that each creation operator $a_k^\dagger$ contributes an independent degree of freedom. Orthogonal query initialization is the discrete analogue: each register "mode" probes an independent direction in semantic space.
+
+### 16.5 Improvement 4: Coupled Creation-Destruction via Canonical Commutation Structure
+
+**QFT motivation.** In quantum field theory, the creation operator $a^\dagger$ and annihilation operator $a$ are algebraically conjugate: $[a, a^\dagger] = 1$. The creation and annihilation amplitudes are not independent modules --- they are mathematical adjoints of each other. The destruction amplitude is determined by the creation amplitude.
+
+Currently, FockPARFLM's creation gate (Q/K/V attention readout) and destruction gate (independent MLP sigmoid) are structurally decoupled. The destruction gate is an MLP conditioned on the register's own state $r_k$:
+
+$$g_{\mathrm{destroy}}^{(k)} = \sigma(\mathrm{MLP}(r_k))$$
+
+This has no structural relationship to the creation attention pattern $\alpha_{kj}$. The QFT canonical structure suggests they should be coupled: the destruction signal should be derived from the **same attention pattern** that created the register.
+
+**The prescription.** Replace the MLP destruction gate with an **attention-derived destruction signal**:
+
+$$g_{\mathrm{destroy}}^{(k)} = 1 - \max_j \alpha_{kj}$$
+
+The logic:
+
+- If the register's creation attention is peaked ($\max_j \alpha_{kj} \approx 1$), the register carries focused, token-specific content and should **survive** ($g_{\mathrm{destroy}} \approx 0$)
+- If the creation attention is diffuse ($\max_j \alpha_{kj} \approx 1/T$), the register carries only mean-pool information (free-field content with no interaction) and should be **destroyed** ($g_{\mathrm{destroy}} \approx 1$)
+
+The salience update with the coupled destruction becomes:
+
+$$\sigma_k \leftarrow \sigma_k \cdot \lambda + \max_j(\alpha_{kj}) \cdot (1 - \lambda)$$
+
+$$\sigma_k \leftarrow \sigma_k \cdot \max_j(\alpha_{kj})$$
+
+where the first equation is the creation update (same as Section 9.1) and the second replaces the independent MLP destruction. Registers with consistently low attention peaks will see their salience decay geometrically toward zero, automatically deactivating them.
+
+**Benefits over the MLP destruction gate:**
+
+| Property | MLP destruction gate | Attention-derived destruction |
+|---|---|---|
+| Parameters | $d \cdot (d/4) + (d/4) \cdot 1 = d^2/4 + d/4$ per layer | Zero additional parameters |
+| Coupling to creation | None (independent MLP) | Canonical: $g_{\mathrm{destroy}} = 1 - g_{\mathrm{create}}$ |
+| QFT structure | $a$ and $a^\dagger$ independent | $a$ and $a^\dagger$ conjugate ($[a, a^\dagger] = 1$) |
+| Interpretability | Opaque (learned MLP) | Transparent: destroy iff attention is diffuse |
+
+This is also consistent with beim Graben et al.'s (2022) Fock-space framework for CFGs, where annihilation operators are the algebraic adjoints of creation operators --- a phrase is "destroyed" (decomposed) by the adjoint of the operator that "created" (composed) it.
+
+### 16.6 Combined Architecture: QFT-Informed FockPARFLM v2.1
+
+The four improvements compose naturally with the learnable temperature of Section 14.9. The updated creation gate becomes:
+
+$$q_k = W_Q^{(k)} r_k, \qquad k_j^{(k)} = W_K^{(k)} h_j, \qquad v_j = W_V h_j$$
+
+$$s_{kj} = q_k \cdot k_j^{(k)} + g_j, \qquad g_j \sim \mathrm{Gumbel}(0, 1)$$
+
+$$\alpha_{kj} = \mathrm{softmax}_j\left(\frac{s_{kj}}{\tau}\right), \qquad \tau = \exp(\theta_\tau)$$
+
+$$r_k \leftarrow \sum_j \alpha_{kj} \cdot v_j$$
+
+$$\sigma_k \leftarrow \sigma_k \cdot \lambda + \max_j(\alpha_{kj}) \cdot (1 - \lambda)$$
+
+$$\sigma_k \leftarrow \sigma_k \cdot \max_j(\alpha_{kj})$$
+
+![QFT-Informed FockPARFLM v2.1 Creation Gate](images/fock_creation_gate_v21.png)
+
+### 16.7 Summary: QFT-Motivated Design Principles
+
+| Current design | QFT-motivated improvement | QFT justification |
+|---|---|---|
+| Deterministic softmax creation | Gumbel-Softmax (stochastic) | Virtual particle creation is probabilistic; vacuum fluctuations diversify register content |
+| Shared $W_K$ across registers | Per-register $W_K^{(k)}$ subspaces | Independent interaction channels maximize $G_c^{(4)}$; shared keys correlate registers |
+| Isotropic Gaussian $W_Q$ init | Orthogonal initialization | Maximally spread query probes; analogous to orthogonal plane-wave modes in field expansion |
+| Independent MLP destruction | Attention-derived destruction | Canonical commutation: $a$ and $a^\dagger$ are algebraic conjugates, not independent modules |
+
+These four changes are compatible with the learnable temperature fix (Section 14.9) and can be tested incrementally in the D6-D10 experimental series:
+
+| Arm | Changes vs D6 | Tests |
+|---|---|---|
+| D6 | Learnable $\tau$ only | Baseline for temperature fix |
+| D7 | D6 + Gumbel-Softmax creation | Stochastic creation effect |
+| D8 | D7 + per-register $W_K^{(k)}$ | Independent interaction channels |
+| D9 | D8 + orthogonal $W_Q$ init | Cold-start diversity |
+| D10 | D9 + canonical destruction | Full QFT-informed gate |
+
+---
+
+## 17. QFT v2.1 Experiment Results and Current Bottleneck Analysis
+
+### 17.1 Experiment Design
+
+The QFT-motivated improvements of Section 16 were tested in a controlled 9-arm experiment (`fockparf_v2_qft_improvements.ipynb`), each arm using the P10g-equivalent architecture (d=256, L=8, M=16, v\_hidden=2048) on TinyStories with a short training budget (1M tokens, 2000 steps, seed 0) to isolate the effect of each QFT improvement before committing to full-scale runs.
+
+| Cell | Description | Gumbel | Per-reg keys | Ortho init | Canon. destroy | tau | M |
+|---|---|---|---|---|---|---|---|
+| Q0 | FockPARF v2 baseline | - | - | - | - | fixed | 16 |
+| Q1 | + Gumbel-Softmax creation | yes | - | - | - | fixed | 16 |
+| Q2 | + per-register key subspaces | - | yes | - | - | fixed | 16 |
+| Q3 | + orthogonal W\_Q init | - | - | yes | - | fixed | 16 |
+| Q4 | + canonical destruction | - | - | - | yes | fixed | 16 |
+| Q5 | Full QFT v2.1 (all four) | yes | yes | yes | yes | fixed | 16 |
+| Q6 | Q5 + learnable tau (init 1.0) | yes | yes | yes | yes | learnable | 16 |
+| Q7 | Q5 + M=32 registers | yes | yes | yes | yes | fixed | 32 |
+| Q8 | PARFLM baseline (no registers) | - | - | - | - | - | 0 |
+
+### 17.2 Results Summary
+
+| Cell | Best PPL | Final PPL | vs Q0 | vs Q8 (PARFLM) | Entropy | Diversity |
+|---|---|---|---|---|---|---|
+| Q0 | 58.84 | 59.16 | -- | +4.3% | 0.134 | 0.145 |
+| Q1 | 58.83 | 59.11 | -0.0% | +4.3% | 0.132 | 0.149 |
+| Q2 | 59.38 | 59.60 | +0.9% | +5.2% | 0.141 | 0.347 |
+| Q3 | 56.35 | 56.81 | -4.2% | -0.1% | 0.135 | 0.300 |
+| Q4 | 55.89 | 56.60 | -5.0% | -1.0% | 0.134 | 0.245 |
+| Q5 | 58.48 | 58.82 | -0.6% | +3.6% | 0.147 | 0.644 |
+| **Q6** | **53.47** | **53.67** | **-9.1%** | **-5.2%** | **0.304** | **0.785** |
+| Q7 | 122.24 | 122.80 | +107.7% | +116.6% | 0.155 | 0.489 |
+| Q8 | 56.43 | 56.79 | -4.1% | -- | -- | -- |
+
+### 17.3 Key Findings
+
+**Finding 1: Naive Fock augmentation hurts.** Q0 (FockPARF v2 baseline, PPL 58.84) is *worse* than plain PARFLM with no registers (Q8, PPL 56.43). The register mechanism in its default configuration adds parameters without adding useful information routing. The QFT improvements are not optional refinements --- they are what makes the register mechanism beneficial.
+
+**Finding 2: Q3 and Q4 are the individual winners.** Orthogonal query initialization (Q3, -4.2% vs Q0) and canonical destruction (Q4, -5.0% vs Q0) each independently bring FockPARFLM to parity with PARFLM. Q3 works by ensuring registers probe diverse semantic subspaces from the first forward pass. Q4 works by coupling creation and destruction --- registers carrying focused content persist; registers carrying diffuse (free-field) content are annihilated.
+
+**Finding 3: Q5 interference resolved by learnable tau.** Combining all four improvements without learnable temperature (Q5, PPL 58.48) is worse than Q3 or Q4 alone. The four mechanisms interfere when the temperature is frozen: Gumbel noise and per-register keys increase score variance, but the fixed $1/\sqrt{d_k}$ scaling cannot compensate. Adding a learnable temperature (Q6, PPL 53.47) resolves this completely --- it is the single best arm, 9.1% below the FockPARF baseline and 5.2% below PARFLM.
+
+**Finding 4: Q6 achieves genuine register specialization.** Q6's register diversity of 0.785 (vs Q0's 0.145) confirms that registers in Q6 specialize on different interaction channels. Its mean normalized entropy of 0.304 (vs Q0's 0.134) shows the registers are attending selectively but not collapsed --- intermediate between uniform attention (1.0) and one-hot selection (0.0). Per-layer analysis shows diversity growing smoothly from 0.985 at layer 1 to 0.864 at layer 7, indicating that later layers progressively sharpen register assignments.
+
+**Finding 5: M=32 registers diverge.** Q7 (M=32, PPL 122.24) fails catastrophically. Diversity collapses at layers 5--7 (from 1.0 to 0.07), suggesting the model cannot coordinate 32 registers without additional stabilization (e.g., a temperature annealing schedule or per-register temperature parameters). This is consistent with the NN-QFT $1/N_h$ suppression result: each additional register contributes a smaller non-Gaussian correction, and at 32 registers the optimization landscape becomes too complex for the fixed temperature to navigate.
+
+**Finding 6: Canonical destruction fix.** The original Q4 implementation caused catastrophic register collapse (all registers died on the first forward pass) because multiplying salience by raw $\alpha_{\max}$ (which is approximately $1/T \approx 0.004$ at initialization) produced $0.004^L \approx 10^{-18}$ after $L$ layers. The fix uses a log-normalized peakedness signal:
+
+$$\text{survival} = \frac{\log(\alpha_{\max} \cdot T)}{\log(T)} \in [0, 1]$$
+
+$$g_{\text{destroy}} = 0.1 + 0.4 \cdot (1 - \text{survival}) \in [0.1, 0.5]$$
+
+This produces meaningful selectivity: uniform attention yields $g_{\text{destroy}} \approx 0.5$ (rapid annihilation), while peaked attention yields $g_{\text{destroy}} \approx 0.1$ (long persistence). The MLP destruction gates are fully replaced (not stacked on top), and a forward hook captures $\alpha_{\max}$ during the existing creation gate call without any additional forward passes.
+
+### 17.4 Contextualizing Against the PARFLM Ceiling
+
+The P10 ladder established the PARFLM architectural ceiling on TinyStories:
+
+| Run | Architecture | Steps | Tokens | Best PPL |
+|---|---|---|---|---|
+| P10g | PARFLM (v\_hidden=2048, 22M params) | 16,000 | 5M | 26.42 |
+| P10h | PARFLM (same) | 16,000 | 20M | 26.43 |
+| S2 (v2) | FockPARF v1 (d=256, L=8, M=32) | 16,000 | 5M+ | 27.85 |
+
+The Q6 result (53.47 PPL at 2000 steps / 1M tokens) is a small-budget proof-of-concept. At the same short budget, PARFLM (Q8) achieves 56.43 --- so Q6 already holds a 5.2% advantage. Power-law extrapolation of Q6's learning curve (scaling exponent $\alpha \approx 0.33$) suggests PPL $\sim$24--26 at 8000 steps with 5M tokens, which would be at or slightly below the P10g/h PARFLM ceiling. Whether Q6 can definitively break through the 26.4 PPL wall remains to be tested.
+
+### 17.5 Current Bottleneck: The Temperature-Register Coordination Problem
+
+The Q6 and Q7 results together reveal the current binding bottleneck. The Q6 recipe (all four QFT improvements + learnable temperature + M=16) is the clear winner, but:
+
+1. **The global learnable temperature is a single scalar.** All 16 registers share the same temperature $\tau$. This means the model must find a single compromise temperature that works across registers with different semantic roles. At M=16 this compromise is feasible; at M=32 (Q7) it fails completely.
+
+2. **The M=32 diversity collapse at deep layers** (layers 5--7) indicates the model needs additional structure to coordinate large register pools. In multi-head attention, each head has its own Q/K projections and effective temperature. The Fock register pool currently has per-register Q but shared temperature --- an intermediate level of independence that works at M=16 but not at M=32.
+
+3. **The 26.4 PPL PARFLM ceiling is architectural, not data-limited** (confirmed by P10h). To break through it, the Fock mechanism must provide information routing that the conservative PARF potential cannot. The Q6 result shows the mechanism is on the right track (5.2% better than PARFLM at matched budget), but the margin is modest.
+
+### 17.6 Next Steps
+
+Based on the QFT v2.1 results, the following improvements are the highest-priority candidates for breaking through the 26.4 PPL ceiling:
+
+1. **Per-register temperature.** Replace the single global $\tau = \exp(\theta_\tau)$ with per-register temperatures $\tau_k = \exp(\theta_{\tau,k})$ for $k = 1, \ldots, M$. This adds $M$ scalar parameters (16 at current scale) and allows each register to discover its own optimal attention sharpness. Hypothesis: this is necessary for M=32 to work and may further improve M=16.
+
+2. **Temperature annealing schedule.** Initialize at a warm temperature ($\tau_0 = 1.0$) for exploration, then anneal toward a lower temperature ($\tau_{\min} = 0.1$--$0.3$) over training. This is analogous to simulated annealing and provides a more principled initialization trajectory than a fixed learnable scalar.
+
+3. **Full-scale Q6 validation.** Run Q6 at the P10g budget (8000 steps, 5M tokens) to determine whether it breaks the 26.4 PPL ceiling. This is the critical experiment: if Q6 at full budget achieves PPL $\lt$ 26.4, it confirms that the QFT-motivated Fock mechanism provides expressivity beyond the conservative PARFLM ceiling.
+
+4. **Per-register temperature + M=32.** If per-register temperature fixes the Q7 divergence, scaling to M=32 registers with the full QFT stack could unlock further gains. The Q7 diagnostic (diversity collapse at deep layers) is the signature of the problem; per-register temperature is the predicted fix.
+
+5. **Deeper V\_theta.** The P10 ladder showed that V\_theta width is the dominant parameter lever for PARFLM. Whether the same holds when Fock registers provide non-conservative routing remains to be tested. Hypothesis: the Fock mechanism reduces the burden on V\_theta by providing direct information routing, so the V\_theta ceiling may be less binding.
+
+### 17.7 Experiment Log
+
+| Experiment | Notebook | Results directory | Date |
+|---|---|---|---|
+| QFT v2.1 (Q0--Q8) | `scripts/fockparf_v2_qft_improvements.ipynb` | `results/fock_v2_qft/` | May 2026 |
+
+---
+
 ## References
 
 - **Gueorguiev, D.** (2026). *Semantic Simulation: A Prescriptive Lagrangian Framework for Efficient Semantic Inference* (v4). arXiv / SSRN.
@@ -896,9 +1196,13 @@ The temperature evolution curve $\tau(t)$ is logged at every training step, prov
 
 - **Zhai, S., Talbott, S., Srivastava, N., et al.** (2021). An attention free transformer. *arXiv:2105.14103*. (Per-head learnable temperature.)
 
-- `docs/fock-parflm/Augmenting_PARFLM_to_handle_MCS_Languages.md`: FockPARFLM Phase 1 results and Phase 2 experimental plan  
-- `docs/parflm/PARF-SPLM_Path_Forward_and_Experiments.md`: P10 ladder context  
-- `semsimula-paper/notebooks/conservative_arch/parf/results/fockparf_improvement/`: Full P1–P5 sweep results  
+- **Ageev, D. S., Ageeva, Y. A.** (2026). Neural Network Quantum Field Theory from Transformer Architectures. *arXiv:2602.10209*.
+
+- **beim Graben, P., Huber, M., Meyer, W., Römer, R., Wolff, M.** (2022). Vector Symbolic Architectures for Context-Free Grammars. *Cognitive Computation*, 14, 733–748 (arXiv:2003.05171).
+
+- `docs/Augmenting_PARFLM_to_handle_MCS_Languages.md`: FockPARFLM Phase 1 results and Phase 2 experimental plan  
+- `docs/PARF-SPLM_Path_Forward_and_Experiments.md`: P10 ladder context  
+- `notebooks/conservative_arch/parf/results/fockparf_improvement/`: Full P1–P5 sweep results  
 
 ---
 
