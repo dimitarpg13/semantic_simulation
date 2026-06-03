@@ -2,6 +2,8 @@
 
 **Work in progress — last updated April 2026**
 
+> **Rendering note.** This document contains LaTeX math (inline `$...$` and display `$$...$$` blocks, with macros such as `\mathfrak{...}`, `\boldsymbol{...}`, `\mathcal{...}`, etc.). The math has been verified to render correctly in **Safari**. In **Chrome** some symbols — notably calligraphic and fraktur letters, e.g. `\mathfrak{C}` rendering as a plain `C` instead of $\mathfrak{C}$ — appear to render incorrectly. **Firefox** has not been tested. If symbols look wrong, please view the document in Safari or consult the main paper's PDF, where the same symbols are typeset by LaTeX directly.
+
 ---
 
 ## Abstract
@@ -31,7 +33,7 @@ Semantic mass enters the framework at every level of the dynamics. The following
 | Role | Expression | Source |
 |---|---|---|
 | **Center of mass** | $\vec{r}\_c = \frac{\sum \mathfrak{m}\_i \vec{r}\_i}{\sum \mathfrak{m}\_i}$ | [1, eq. 1] |
-| **Centering matrix** $M$ | $M_{ij} = \delta_{ij}(1 - \tilde{\mathfrak{m}}\_i) - (1-\delta_{ij})\tilde{\mathfrak{m}}\_j$ | [3, eq. 8] |
+| **Centering matrix** $M$ | $M\_{ij} = \delta\_{ij}(1 - \tilde{\mathfrak{m}}\_i) - (1-\delta\_{ij})\tilde{\mathfrak{m}}\_j$ | [3, eq. 8] |
 | **Asymptotic velocity** | $\upsilon = \sqrt{E_t / \mathfrak{m}}$ | [1, eq. 40] |
 | **Gaussian well depth** | $V(x) = \mathfrak{m} \cdot \upsilon^2 \cdot (1 - e^{-\kappa^2 x^2})$ | [2, eq. 1] |
 | **Kinetic energy** | $T = \frac{1}{2} \mathfrak{m} v^2$ | [4, eq. 1] |
@@ -482,7 +484,7 @@ graph LR
 1. Compute unweighted action $\mathcal{S} = \sum_t (\frac{1}{2}\omega_t^2 - V_t)$ (as in current experiments).
 2. Compute mass-weighted action $\mathcal{S}_w = \sum_t w_t (\frac{1}{2}\omega_t^2 - V_t)$.
 3. Compute STP loss for each trajectory.
-4. Compare $|r|(\mathcal{L}_{STP}, \mathcal{S})$ with $|r|(\mathcal{L}_{STP}, \mathcal{S}_w)$.
+4. Compare $|r|(\mathcal{L}\_{STP}, \mathcal{S})$ with $|r|(\mathcal{L}\_{STP}, \mathcal{S}\_w)$.
 
 **Success criterion**: $|r|(\mathcal{L}_{STP}, \mathcal{S}_w) > |r|(\mathcal{L}_{STP}, \mathcal{S})$, with $p < 0.05$.
 
@@ -505,7 +507,7 @@ graph LR
 
 1. For each token position $t$ in a test corpus, extract $h_t^{(0)}$ (token + positional embedding) and $h_t^{(\ell)}$ for $\ell = 1, \ldots, L$.
 2. Compute the initial velocity $\vec{v}_t^{(0)} = h_t^{(1)} - h_t^{(0)}$ and the attention mass $w_t$ (chosen layer as in E1–E4).
-3. Using per-component Gaussian-well parameters $(a_k, b_k)$ fitted by the Acceleration Program (§A.1 for GPT-2, §A.2 for Llama-3.2-1B — see the Acceleration Program appendix), integrate the Euler–Lagrange equations forward in layer-time $\ell$ to obtain the predicted trajectory $\hat{h}_t^{(\ell)}$ for $\ell = 2, \ldots, L$.
+3. Using per-component Gaussian-well parameters $(a_k, b_k)$ fitted by the Acceleration Program (§A.1 for GPT-2, §A.2 for Llama-3.2-1B — see `docs/To_Dos_for_paper_v2.md` §A), integrate the Euler–Lagrange equations forward in layer-time $\ell$ to obtain the predicted trajectory $\hat{h}_t^{(\ell)}$ for $\ell = 2, \ldots, L$.
 4. Report the per-layer relative residual $\rho_t^{(\ell)} = \lVert\hat{h}_t^{(\ell)} - h_t^{(\ell)}\rVert / \lVerth_t^{(\ell)}\rVert$ and its distribution across token types.
 
 **Success criteria (tiered)**:

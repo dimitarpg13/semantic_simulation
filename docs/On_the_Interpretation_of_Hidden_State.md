@@ -2,11 +2,13 @@
 
 **Work in progress — last updated April 2026**
 
+> **Rendering note.** This document contains LaTeX math (inline `$...$` and display `$$...$$` blocks, with macros such as `\mathfrak{...}`, `\boldsymbol{...}`, `\mathcal{...}`, etc.). The math has been verified to render correctly in **Safari**. In **Chrome** some symbols — notably calligraphic and fraktur letters, e.g. `\mathfrak{C}` rendering as a plain `C` instead of $\mathfrak{C}$ — appear to render incorrectly. **Firefox** has not been tested. If symbols look wrong, please view the document in Safari or consult the main paper's PDF, where the same symbols are typeset by LaTeX directly.
+
 ---
 
 ## Abstract
 
-This document records an ongoing investigation into the correct mapping between **transformer hidden states** and the entities of the **Semantic Simulation framework** (Gueorguiev [1][2][3][4][5]). The central question is: *what does a single hidden state $h_t$ correspond to in the hierarchy of semantic aspects, properties, particles, and structures?*
+This document records an ongoing investigation into the correct mapping between **transformer hidden states** and the entities of the **Semantic Simulation framework** (Gueorguiev [1][2][3][4][5]). The central question is: what does a single hidden state $h_t$ correspond to in the hierarchy of semantic aspects, properties, particles, and structures?
 
 The discussion originated from an inconsistency in earlier analyses that loosely identified hidden states with "semantic structures." A closer examination reveals that because a token is indivisible from the transformer's perspective, its hidden state more naturally maps to a **semantic property** — the first entity in the hierarchy that has internal structure (via its $d$ dimensions) while remaining a single unit. However, this identification remains conjectural and requires experimental validation. The key testable prediction is that groups of hidden states (corresponding to linguistic phrases) should converge into cohesive units across transformer layers, mirroring the formation of **semantic particles** from ensembles of properties in the Semantic Simulation framework.
 
@@ -22,7 +24,7 @@ The Semantic Simulation framework defines a hierarchy of entities in semantic sp
 
 ```mermaid
 graph TB
-    A["Semantic Aspect A_i<br>(type l_i, angular coordinates θ_i)<br>The indivisible unit"]
+    A["Semantic Aspect A_i<br>(type l_i, angular coordinates theta_i)<br>The indivisible unit"]
     P["Semantic Property P<br>(K-polytope of N aspects, signature matrix P = MX)<br>Has internal structure but is a single entity"]
     V["Semantic Particle V<br>(ensemble of properties in bound state)<br>The first 'compound' unit"]
     S["Semantic Structure S<br>(compound of particles)<br>Full semantic meaning"]
@@ -332,13 +334,13 @@ The hidden states do not cluster by phrase across layers. This would mean:
 
 This document connects to and is informed by:
 
-- **[6] Hidden States, Semantic Tube Geodesics, and Semantic Structures** (`Hidden_States_Semantic_Tube_Geodesics_and_Semantic_Structures.md`): The initial comparison of hidden state trajectories with semantic structure dynamics. Contains the original (imprecise) mapping that this document refines.
+- **[6] Hidden States, Semantic Tube Geodesics, and Semantic Structures** (working note, not included in this repository): The initial comparison of hidden state trajectories with semantic structure dynamics. Contains the original (imprecise) mapping that this document refines.
 
-- **[7] Equivalence between the Evolution of Hidden States and Semantic Structures** (`Equivalence_between_the_Evolution_of_Hidden_States_and_Semantic_Structures.md`): Maps the governing equations (ODE/SDE from Huang et al. vs. Euler-Lagrange from Semantic Simulation). Should be updated to reflect the corrected granularity.
+- **[7] Equivalence between the Evolution of Hidden States and Semantic Structures** (working note, not included in this repository): Maps the governing equations (ODE/SDE from Huang et al. vs. Euler-Lagrange from Semantic Simulation). Should be updated to reflect the corrected granularity.
 
-- **[8] On the Interpretation of Semantic Mass** (`On_the_Interpretation_of_Semantic_Mass.md`): Identifies semantic mass with aggregate attention received. The mass interpretation is used in Experiments 4 and 5 of this document.
+- **[8] On the Interpretation of Semantic Mass** (companion note: [`On_the_Interpretation_of_Semantic_Mass.md`](On_the_Interpretation_of_Semantic_Mass.md)): Identifies semantic mass with aggregate attention received. The mass interpretation is used in Experiments 4 and 5 of this document.
 
-- **[9] STP Loss as an Emergent Property of the Energy Landscape** (`STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md`): Contains the Gaussian well conjecture and the experimental results ($R^2 \approx 0$) that motivate the per-phrase fitting proposed here.
+- **[9] STP Loss as an Emergent Property of the Energy Landscape** (companion note: [`STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md`](STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md)): Contains the Gaussian well conjecture and the experimental results ($R^2 \approx 0$) that motivate the per-phrase fitting proposed here.
 
 ---
 
@@ -354,12 +356,12 @@ This document connects to and is informed by:
 
 [5] D. Gueorguiev, "On the Signature Matrix of Semantic Property," 2022.
 
-[6] "Hidden States, Semantic Tube Geodesics, and Semantic Structures," 2026 (`Hidden_States_Semantic_Tube_Geodesics_and_Semantic_Structures.md`).
+[6] "Hidden States, Semantic Tube Geodesics, and Semantic Structures," 2026 (working note, not included in this repository).
 
-[7] "Equivalence between the Evolution of Hidden States and Semantic Structures," 2026 (`Equivalence_between_the_Evolution_of_Hidden_States_and_Semantic_Structures.md`).
+[7] "Equivalence between the Evolution of Hidden States and Semantic Structures," 2026 (working note, not included in this repository).
 
-[8] "On the Interpretation of Semantic Mass in Terms of Transformer Mechanisms," 2026 (`On_the_Interpretation_of_Semantic_Mass.md`).
+[8] "On the Interpretation of Semantic Mass in Terms of Transformer Mechanisms," 2026 (companion note: [`On_the_Interpretation_of_Semantic_Mass.md`](On_the_Interpretation_of_Semantic_Mass.md)).
 
-[9] "STP Loss as an Emergent Property of the Energy Landscape Defined by a Gaussian Well Potential," 2026 (`STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md`).
+[9] "STP Loss as an Emergent Property of the Energy Landscape Defined by a Gaussian Well Potential," 2026 (companion note: [`STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md`](STP_Loss_Is_An_Emergent_Property_Of_The_Energy_Landscape_Defined_By_Gaussian_Well_Potential.md)).
 
 [10] H. Huang, Y. LeCun, R. Balestriero, "Semantic Tube Prediction: Beating LLM Data Efficiency with JEPA," arXiv:2602.22617, 2026.

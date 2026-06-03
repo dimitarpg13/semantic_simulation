@@ -7,7 +7,7 @@ with force-field parameters calibrated by reinforcement learning
 rather than learned end-to-end inside a neural network.
 
 Written 2026-04-24, parallel in role to
-`SPLM_Path_Toward_SOTA.md` but for the simulator branch of the
+`docs/SPLM_Path_Toward_SOTA.md` but for the simulator branch of the
 research programme. The two branches are complementary, not
 substitutes.
 
@@ -377,7 +377,7 @@ v0's known expressivity ceiling does not get mistaken for the
 framework's ceiling.
 
 The full specification of each mechanism lives in
-`Semantic_Simulator_EOM.md` §13.
+`docs/Semantic_Simulator_EOM.md` §13.
 
 ### 10.1 v1.5 — Destruction / salience decay (cheapest, prototype-first)
 
@@ -421,8 +421,7 @@ Encodes non-commutative composition (essential for
 verb-argument structure).
 
 **Mathematical infrastructure already in place.** Lie-group
-machinery cited in the paper (`Gueorguiev2025LieGroups`,
-`BaezMuniain1994`, `Nakahara2003`) is the natural toolkit. The
+machinery cited in the paper (`BaezMuniain1994`, `Nakahara2003`) is the natural toolkit. The
 framework inherits a half-century of operator-algebra mathematics
 once it goes this route.
 
@@ -573,7 +572,7 @@ The submission strategy is:
 
 ## 13. First action
 
-**M0 is done.** `Semantic_Simulator_EOM.md` exists; it contains
+**M0 is done.** `docs/Semantic_Simulator_EOM.md` exists; it contains
 the complete v0 equations of motion as one block of equations and
 pseudocode, separate from the paper's prose. The act of writing it
 surfaced seven under-specifications (§12 of that document) that the
@@ -595,7 +594,7 @@ perplexity, or not — is the first programme-level decision gate.
 ---
 
 *End of programme memo. The v0 EOM is specified in
-`Semantic_Simulator_EOM.md` (M0, complete). Next action:
+`docs/Semantic_Simulator_EOM.md` (M0, complete). Next action:
 M1 — verify the parameter-classification table on a small corpus
 (~1–2 days). The structure-lifecycle extensions (v1.5 / v2 / v3) of
 §10 are on record as deferred-but-planned milestones, not

@@ -18,9 +18,10 @@
   — proves no scalar potential reproduces P1+P2+P3
 - [`Improving_the_Fock_Mechanism_to_match_Attention.md`](Improving_the_Fock_Mechanism_to_match_Attention.md)
   — empirical and design context for the Fock register programme
+- [`On_The_Smoothness_of_Scaled_Dot_Product_Attention.md`](On_The_Smoothness_of_Scaled_Dot_Product_Attention.md)
+  — establishes that the per-head attention force is real-analytic
 - [`Multi-Head_Attention_in_Transformer_Block.md`](Multi-Head_Attention_in_Transformer_Block.md)
   — the underlying mechanics of MHA
-- The smoothness ($C^1$ / real-analyticity) of scaled dot-product attention is established in the semsimula research repo (`docs/On_The_Smoothness_of_Scaled_Dot_Product_Attention.md`).
 
 ---
 
@@ -89,7 +90,8 @@ Theorem:
 Asymmetry ($\alpha_{ij} \ne \alpha_{ji}$) is **not** part of the
 admissibility condition — it is a *consequence* of decoupled query and
 key projections, which N alone does not enforce. Smoothness here is the
-$C^1$ assumption already verified for attention in the semsimula research repository note `On_The_Smoothness_of_Scaled_Dot_Product_Attention.md`.
+$C^1$ assumption already verified for attention in
+[`On_The_Smoothness_of_Scaled_Dot_Product_Attention.md`](On_The_Smoothness_of_Scaled_Dot_Product_Attention.md).
 
 ### 2.3 Optimality Criteria
 
@@ -337,8 +339,8 @@ prediction. It would be falsified by exhibiting any of the following:
    comparable benchmark: a non-attention SCN-admissible architecture
    that ties or beats matched attention at fixed scale. To our
    knowledge none exists, and the failures of the e-init programme
-   (documented in the semsimula research repository note
-   `The_Failure_of_Conservative_Models_to_explain_hidden_state_trajectories.md`)
+   (see
+   [`The_Failure_of_Conservative_Models_to_explain_hidden_state_trajectories.md`](The_Failure_of_Conservative_Models_to_explain_hidden_state_trajectories.md))
    are consistent with the conjecture.
 
 The Fock register results are **not** a falsification because they

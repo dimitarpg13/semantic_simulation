@@ -1,14 +1,14 @@
 # Expressivity Bounds for the v0 Dynamic-Simulation Model
 
-Formal companion to `Advancing_The_Dynamic_Simulation_Model.md`. Provides the four-step argument that the v0 simulator class is at most a finite automaton, derives the predicted $\mathrm{Dyck}_n$ collapse depth $D^\ast$ in closed form, and gives one-paragraph mathematical-apparatus sketches for the three structural extensions v1.5 / v2 / v3.
+Formal companion to `docs/Advancing_The_Dynamic_Simulation_Model.md`. Provides the four-step argument that the v0 simulator class is at most a finite automaton, derives the predicted $\mathrm{Dyck}_n$ collapse depth $D^\ast$ in closed form, and gives one-paragraph mathematical-apparatus sketches for the three structural extensions v1.5 / v2 / v3.
 
-Drafted 2026-04-26. Cross-referenced from `Semantic_Simulator_RL_Calibration_Programme.md` §10.
+Drafted 2026-04-26. Cross-referenced from `docs/Semantic_Simulator_RL_Calibration_Programme.md` §10.
 
 ---
 
 ## 1. Setup
 
-The v0 simulator (`Semantic_Simulator_EOM.md`) integrates the damped Euler–Lagrange flow
+The v0 simulator (`docs/Semantic_Simulator_EOM.md`) integrates the damped Euler–Lagrange flow
 
 $$
 \mathfrak{m}_\ell \ddot{x}_\ell = -\nabla_x V(\xi_\ell, x_\ell) - \gamma \dot{x}_\ell,
@@ -271,11 +271,11 @@ Replace the fixed-cardinality particle list with a state on the **Fock space** $
 
 ### 8.3 Execution (v3) → Lie group action / non-abelian gauge theory
 
-Augment particles with a Lie-group element $g_i \in G$, a non-abelian Lie group (e.g. $SO(d)$, $SU(n)$, or a discrete word-class group). When particle $i$ comes within operating range of particle $j$, $j$'s state transforms as $x_j \mapsto g_i \cdot x_j$. Operator composition is group multiplication: $(g_1 g_2)\cdot x = g_1\cdot(g_2\cdot x)$ with $g_1 g_2 \neq g_2 g_1$ in general — the non-commutativity precisely encodes the meaning-bearing word-order distinction of "John gave Mary a book" vs. "Mary gave John a book". The natural setting is **non-abelian gauge theory** on a fibre bundle over the simulator manifold: each particle carries a fibre element, the gauge field is the manifest interaction operator, and the curvature tensor measures the path-dependence of meaning. Inherited apparatus: Yang–Mills equations, Wilson-loop holonomy (path-dependent meaning composition), gauge equivariance (relabelling-invariance of meaning), and the connection to the SPLM-line analyses in `P-rot-6_transformer_dynamics.md` and `Gauge_Theory_Tutorial.md`. *This extension lifts v0+v2 above context-free*: with $G$-valued operators, the simulator can implement variable substitution, function application, and recursive predicate composition — placing the composite v0+v2+v3 system in the context-sensitive or higher tier.
+Augment particles with a Lie-group element $g_i \in G$, a non-abelian Lie group (e.g. $SO(d)$, $SU(n)$, or a discrete word-class group). When particle $i$ comes within operating range of particle $j$, $j$'s state transforms as $x_j \mapsto g_i \cdot x_j$. Operator composition is group multiplication: $(g_1 g_2)\cdot x = g_1\cdot(g_2\cdot x)$ with $g_1 g_2 \neq g_2 g_1$ in general — the non-commutativity precisely encodes the meaning-bearing word-order distinction of "John gave Mary a book" vs. "Mary gave John a book". The natural setting is **non-abelian gauge theory** on a fibre bundle over the simulator manifold: each particle carries a fibre element, the gauge field is the manifest interaction operator, and the curvature tensor measures the path-dependence of meaning. Inherited apparatus: Yang–Mills equations, Wilson-loop holonomy (path-dependent meaning composition), gauge equivariance (relabelling-invariance of meaning), and the connection to the SPLM-line analyses in `companion_notes/P-rot-6_transformer_dynamics.md` and standard gauge-theory textbooks (Hall, 2015; Baez & Muniain, 1994; Nakahara, 2003). *This extension lifts v0+v2 above context-free*: with $G$-valued operators, the simulator can implement variable substitution, function application, and recursive predicate composition — placing the composite v0+v2+v3 system in the context-sensitive or higher tier.
 
 ### 8.4 Composite formalism
 
-The composite v0+v1.5+v2+v3 system is **a dissipative classical Hamiltonian dynamics on a Fock space, with non-abelian gauge action on the underlying single-particle Hilbert space, and a salience-weighted local operator algebra on the Fock space itself.** This is a classical-mechanical analogue of an **algebraic quantum field theory** in the Haag–Kastler tradition (Haag and Kastler 1964). The framework's commitment to "semantic structures are particles" is the non-quantum reading of the same formal apparatus used for elementary-particle physics. The composite system inherits exact and approximate conservation laws, mean-field limits, renormalisation-group reasoning, and gauge-invariance theorems. A subsequent companion document (v2 EOM specification, deferred per `Semantic_Simulator_RL_Calibration_Programme.md` §10) will specify the v2 EOM in this apparatus; v1.5 and v3 specifications follow analogously.
+The composite v0+v1.5+v2+v3 system is **a dissipative classical Hamiltonian dynamics on a Fock space, with non-abelian gauge action on the underlying single-particle Hilbert space, and a salience-weighted local operator algebra on the Fock space itself.** This is a classical-mechanical analogue of an **algebraic quantum field theory** in the Haag–Kastler tradition (Haag and Kastler 1964). The framework's commitment to "semantic structures are particles" is the non-quantum reading of the same formal apparatus used for elementary-particle physics. The composite system inherits exact and approximate conservation laws, mean-field limits, renormalisation-group reasoning, and gauge-invariance theorems. A subsequent companion document (`docs/Semantic_Simulator_v2_EOM.md`, deferred per `Semantic_Simulator_RL_Calibration_Programme.md` §10) will specify the v2 EOM in this apparatus; v1.5 and v3 specifications follow analogously.
 
 ---
 

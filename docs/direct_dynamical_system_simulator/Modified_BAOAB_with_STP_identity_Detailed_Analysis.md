@@ -5,11 +5,11 @@
 **Scope:** Component-by-component analysis, EOM coupling, RL calibration integration, theoretical properties, trade-offs, and implementation strategy
 
 Companion to:
-- `Semantic_Simulator_EOM.md` — v0 Equations of Motion
-- `Semantic_Simulator_RL_Calibration_Programme.md` — RL calibration programme memo
-- `Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md` — integrator design report
-- `Expressivity_Bounds_For_v0_Simulator.md` — v0 expressivity ceiling
-- `Advancing_The_Dynamic_Simulation_Model.md` — v0 through v3 staging
+- `docs/Semantic_Simulator_EOM.md` — v0 Equations of Motion
+- `docs/Semantic_Simulator_RL_Calibration_Programme.md` — RL calibration programme memo
+- `docs/Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md` — integrator design report
+- `docs/Expressivity_Bounds_For_v0_Simulator.md` — v0 expressivity ceiling
+- `docs/Advancing_The_Dynamic_Simulation_Model.md` — v0 through v3 staging
 
 Last updated: 11 May 2026.
 
@@ -25,7 +25,7 @@ $$
 \mathfrak{m}_t \ddot{x}_t = -\nabla_x V(\xi_t, x_t) - \gamma \dot{x}_t,
 $$
 
-where $\mathfrak{m}_t$ is the per-position semantic mass, $\gamma$ the damping coefficient, and $V = V_{\text{wells}} + V_{\text{SARF}} + V_{\text{PARF}} + V_{\text{ctx}}$ the composite potential with four named force terms.
+where $\mathfrak{m}\_t$ is the per-position semantic mass, $\gamma$ the damping coefficient, and $V = V\_{\text{wells}} + V\_{\text{SARF}} + V\_{\text{PARF}} + V\_{\text{ctx}}$ the composite potential with four named force terms.
 
 The current v0 EOM specification (`Semantic_Simulator_EOM.md` §5) uses a **damped semi-implicit Euler** integrator — a first-order, non-symplectic scheme chosen because the SPLM attractor-extraction experiments (paper §14.15) showed that lower-order integrators produce richer content-bearing attractors than higher-order ones. This was the right prior for the descriptive SPLM programme, where the integrator is an approximation to a transformer's actual computation.
 
@@ -52,7 +52,7 @@ The argument for semi-implicit Euler in the descriptive SPLM setting was empiric
 
 BAOAB is uniquely suited to the direct-simulator regime because of three properties that semi-implicit Euler lacks:
 
-1. **Second-order weak accuracy.** For any smooth observable $\varphi$, $\mathbb{E}[\varphi(\xi_n)] = \mathbb{E}[\varphi(\xi(t_n))] + \mathcal{O}(h^2)$, versus $\mathcal{O}(h)$ for Euler.
+1. **Second-order weak accuracy.** For any smooth observable $\varphi$, $\mathbb{E}[\varphi(\xi\_n)] = \mathbb{E}[\varphi(\xi(t\_n))] + \mathcal{O}(h^2)$, versus $\mathcal{O}(h)$ for Euler.
 2. **Configurational measure preservation.** The leading error in the $\xi$-marginal is suppressed by $\gamma^{-2}$ — the very damping that the EOM demands.
 3. **Exact OU step.** The Ornstein-Uhlenbeck substep on momenta is exact in distribution, not a discretisation.
 
@@ -99,7 +99,7 @@ $$
 \rho_\infty(x, p) \propto \exp\Big[-\beta\big(\tfrac{1}{2} p^\top \mathfrak{m}^{-1} p + V(\xi, x)\big)\Big],
 $$
 
-where $\beta$ is the readout inverse temperature from `Semantic_Simulator_EOM.md` §6. The readout softmax $p(v \mid x_L) \propto \exp(\beta \langle e_v, x_L \rangle)$ samples from this Gibbs measure — the integrator's job is to deliver a state $x_L$ whose distribution matches it.
+where $\beta$ is the readout inverse temperature from `Semantic_Simulator_EOM.md` §6. The readout softmax $p(v \mid x\_L) \propto \exp(\beta \langle e\_v, x\_L \rangle)$ samples from this Gibbs measure — the integrator's job is to deliver a state $x\_L$ whose distribution matches it.
 
 ### 2.2 The four force terms in momentum form
 
@@ -129,16 +129,16 @@ $$
 F_{\text{ctx}}(\xi, x) = -\lambda_{\text{ctx}} (x - \xi).
 $$
 
-The **composite force** is $F(\xi, x) = F_{\text{wells}} + F_{\text{SARF}} + F_{\text{PARF}} + F_{\text{ctx}}$. All four gradients are in closed form — no autograd is needed at the forward-pass level.
+The **composite force** is $F(\xi, x) = F\_{\text{wells}} + F\_{\text{SARF}} + F\_{\text{PARF}} + F\_{\text{ctx}}$. All four gradients are in closed form — no autograd is needed at the forward-pass level.
 
 ### 2.3 Per-step cost analysis
 
 | Force term | Parameters | Cost per step | Static / RL |
 |-----------|-----------|--------------|-------------|
-| $F_{\text{wells}}$ | $K$ anchors | $O(K \cdot d)$ | anchors static; $\upsilon_k, \kappa_k$ RL |
-| $F_{\text{SARF}}$ | $N_S$ anchors | $O(N_S \cdot d)$ | positions static; $\alpha_j, \beta_j, \sigma_{j,\pm}$ RL |
-| $F_{\text{PARF}}$ | $P$ properties | $O(P \cdot d)$ | directions static; $\lambda_p$ RL |
-| $F_{\text{ctx}}$ | 1 scalar | $O(d)$ | $\lambda_{\text{ctx}}$ RL |
+| $F\_{\text{wells}}$ | $K$ anchors | $O(K \cdot d)$ | anchors static; $\upsilon\_k, \kappa\_k$ RL |
+| $F\_{\text{SARF}}$ | $N\_S$ anchors | $O(N\_S \cdot d)$ | positions static; $\alpha\_j, \beta\_j, \sigma\_{j,\pm}$ RL |
+| $F\_{\text{PARF}}$ | $P$ properties | $O(P \cdot d)$ | directions static; $\lambda\_p$ RL |
+| $F\_{\text{ctx}}$ | 1 scalar | $O(d)$ | $\lambda\_{\text{ctx}}$ RL |
 | **Total** | | $O((K + N_S + P) \cdot d)$ | ~98% static, ~2% RL |
 
 At toy scale ($K=32, N_S=16, P=5, d=64$): ~3400 FLOPs per force evaluation. The force evaluation is the **dominant cost** — the integrator arithmetic (additions, scalar multiplications, one random draw) is negligible.
@@ -269,7 +269,7 @@ Two distinct computational advantages:
 
 **1. No backward AD pass.** Standard BAOAB requires $\nabla_x V$ at each B-step. For the composite potential, this means computing gradients of four terms — either by hand-coded gradient kernels or by AD. The STP identity replaces this with a single forward algebraic contraction (a batched GEMM on GPU). No AD tape, no backward pass.
 
-**2. No finite-difference bias.** When fitting Lagrangians to observed trajectories (the descriptive use case), the standard finite-difference estimator $\ddot{x}_n \approx h^{-2}(x_{n+1} - 2x_n + x_{n-1})$ introduces $\mathcal{O}(h^2)$ bias. The STP identity gives exact acceleration at each point.
+**2. No finite-difference bias.** When fitting Lagrangians to observed trajectories (the descriptive use case), the standard finite-difference estimator $\ddot{x}\_n \approx h^{-2}(x\_{n+1} - 2x\_n + x\_{n-1})$ introduces $\mathcal{O}(h^2)$ bias. The STP identity gives exact acceleration at each point.
 
 ### 4.3 STP-BAOAB: the modified B-step
 
@@ -358,7 +358,7 @@ $$
 
 where $\kappa$ depends on $\gamma$ and decays as $\gamma^{-2}$. This means the very damping that the EOM demands — $\gamma > 0$ in the Euler-Lagrange equation — also **suppresses the integrator's measure error**. No other palindromic splitting scheme in this family has this property.
 
-For the semantic simulator, this is structurally critical: the readout softmax $p(v \mid x_L) \propto \exp(\beta \langle e_v, x_L \rangle)$ is a sample from the Gibbs measure. If the integrator's equilibrium distribution deviates from Gibbs, the readout is systematically biased, and no amount of RL calibration can correct a measure-level error.
+For the semantic simulator, this is structurally critical: the readout softmax $p(v \mid x\_L) \propto \exp(\beta \langle e\_v, x\_L \rangle)$ is a sample from the Gibbs measure. If the integrator's equilibrium distribution deviates from Gibbs, the readout is systematically biased, and no amount of RL calibration can correct a measure-level error.
 
 ### 5.3 Connection to the v0 expressivity ceiling
 
@@ -378,7 +378,7 @@ $$
 h \lesssim \frac{2}{\sqrt{\lambda_{\max}(\nabla^2 V / \mathfrak{m})}}.
 $$
 
-For the simulator's potential, $\lambda_{\max}$ is dominated by the sharpest well ($\max_k \kappa_k^2 \mathfrak{m}_k \upsilon_k^2$) or the steepest SARF repulsive core ($\max_j \alpha_j \beta_j / \sigma_{j,-}^2$). At v0 toy scale with $\kappa_k \sim 2, \upsilon_k \sim 0.5, \mathfrak{m}_k \sim 5$: $\lambda_{\max} \sim 10$, giving $h_{\max} \sim 0.6$. The EOM default $\Delta t = 0.5$ is near this limit; BAOAB is more robust than semi-implicit Euler at this operating point.
+For the simulator's potential, $\lambda\_{\max}$ is dominated by the sharpest well ($\max\_k \kappa\_k^2 \mathfrak{m}\_k \upsilon\_k^2$) or the steepest SARF repulsive core ($\max\_j \alpha\_j \beta\_j / \sigma\_{j,-}^2$). At v0 toy scale with $\kappa\_k \sim 2, \upsilon\_k \sim 0.5, \mathfrak{m}\_k \sim 5$: $\lambda\_{\max} \sim 10$, giving $h\_{\max} \sim 0.6$. The EOM default $\Delta t = 0.5$ is near this limit; BAOAB is more robust than semi-implicit Euler at this operating point.
 
 ---
 
@@ -572,7 +572,7 @@ The `Advancing_The_Dynamic_Simulation_Model.md` specifies that v2 introduces cre
 
 ### 9.2 The warm-start pathway
 
-The P10 experimental ladder confirmed that the PARFLM's trained potentials $V_\theta, V_\phi$ saturate at ~26.4 PPL on TinyStories — the v0 expressivity ceiling. These potentials are the empirical warm-start artefacts that the RL calibration programme will consume. STP-BAOAB is the integrator that will evolve particles under these warm-start potentials during Algorithms B and C of the RL programme, where the per-step cost directly determines wall-clock time.
+The P10 experimental ladder confirmed that the PARFLM's trained potentials $V\_\theta, V\_\phi$ saturate at ~26.4 PPL on TinyStories — the v0 expressivity ceiling. These potentials are the empirical warm-start artefacts that the RL calibration programme will consume. STP-BAOAB is the integrator that will evolve particles under these warm-start potentials during Algorithms B and C of the RL programme, where the per-step cost directly determines wall-clock time.
 
 ```mermaid
 flowchart TD
@@ -613,13 +613,13 @@ flowchart TD
 
 ### 11.1 The warm-start opportunity
 
-The P10 experimental ladder (PARFLM), FockPARFLM, and Helmholtz SPLM all train scalar potential networks $V_\theta, V_\phi$ inside a transformer scaffold via Algorithm A (supervised next-token prediction). These networks encode empirically calibrated energy landscapes — the attractor positions, basin depths, force profiles, and coupling structures that the transformer's hidden states actually traverse. The P10h result confirmed that these potentials saturate at the v0 expressivity ceiling (~26.4 PPL on TinyStories), meaning Algorithm A has extracted the maximum information encodable in the v0 potential form.
+The P10 experimental ladder (PARFLM), FockPARFLM, and Helmholtz SPLM all train scalar potential networks $V\_\theta, V\_\phi$ inside a transformer scaffold via Algorithm A (supervised next-token prediction). These networks encode empirically calibrated energy landscapes — the attractor positions, basin depths, force profiles, and coupling structures that the transformer's hidden states actually traverse. The P10h result confirmed that these potentials saturate at the v0 expressivity ceiling (~26.4 PPL on TinyStories), meaning Algorithm A has extracted the maximum information encodable in the v0 potential form.
 
 The STP-BAOAB integrator can **directly consume** these trained potentials as force-field components, eliminating the cold-start problem that would otherwise face a randomly initialised direct simulator.
 
 ### 11.2 Architecture: the `HarvestedPotential` adapter
 
-The trained `ScalarPotential` (from the PARFLM implementation) has the signature:
+The trained `ScalarPotential` from `notebooks/conservative_arch/model.py` has the signature:
 
 ```python
 class ScalarPotential(nn.Module):
@@ -666,8 +666,8 @@ class HarvestedPotential(PotentialTerm):
 
 | Source | What is harvested | Shape | Role in STP-BAOAB |
 |--------|------------------|-------|-------------------|
-| **PARFLM** $V_\theta$ | Single-particle potential MLP | $(2d) \to 1$ | Replaces/augments $V_{\text{wells}} + V_{\text{ctx}}$ |
-| **PARFLM** $V_\phi$ | Pairwise interaction potential | $(d, d) \to 1$ | Replaces/augments $V_{\text{SARF}}$ |
+| **PARFLM** $V\_\theta$ | Single-particle potential MLP | $(2d) \to 1$ | Replaces/augments $V\_{\text{wells}} + V\_{\text{ctx}}$ |
+| **PARFLM** $V\_\phi$ | Pairwise interaction potential | $(d, d) \to 1$ | Replaces/augments $V\_{\text{SARF}}$ |
 | **FockPARFLM** | Potentials + creation/destruction gates | $(N \cdot d) \to 1$ | v2 extension: variable-$N$ force field |
 | **Helmholtz SPLM** | Helmholtz-decomposed potentials (conservative + solenoidal) | $(2d) \to 1$ | Provides guaranteed irrotational component |
 
@@ -705,9 +705,9 @@ The recommended sequence:
 
 1. **M2 (behaviour cloning):** Frozen harvested $V_\theta$ provides the entire force field. The RL loop calibrates only the residual parameters ($\gamma$, $\beta$, coupling strengths). This tests whether the PARFLM-trained landscape is already sufficient for the direct simulator.
 
-2. **M3 (intrinsic-reward RL):** If M2 succeeds, keep frozen. If M2 shows systematic bias, switch to hybrid mode — a learnable residual $V_{\text{res}}$ (small MLP or parametric correction) is added on top of the frozen harvested potential.
+2. **M3 (intrinsic-reward RL):** If M2 succeeds, keep frozen. If M2 shows systematic bias, switch to hybrid mode — a learnable residual $V\_{\text{res}}$ (small MLP or parametric correction) is added on top of the frozen harvested potential.
 
-3. **M4 (task-reward RL):** Full fine-tuning of the harvested weights with low learning rate and elastic weight decay $\lambda_{\text{elastic}} \lVert \theta - \theta_{\text{PARFLM}} \rVert^2$, penalising large departures from the pretrained landscape.
+3. **M4 (task-reward RL):** Full fine-tuning of the harvested weights with low learning rate and elastic weight decay $\lambda\_{\text{elastic}} \lVert \theta - \theta\_{\text{PARFLM}} \rVert^2$, penalising large departures from the pretrained landscape.
 
 ### 11.5 Composite potential with harvested + parametric terms
 
@@ -717,7 +717,7 @@ $$
 V_{\text{total}}(\xi, x) = \underbrace{V_\theta^{\text{PARFLM}}(\xi, x)}_{\text{harvested, frozen or fine-tuned}} + \underbrace{V_{\text{residual}}(\xi, x)}_{\text{RL-calibrated parametric correction}}
 $$
 
-where $V_{\text{residual}}$ is the small parametric potential (wells + SARF + PARF + context coupling) from the EOM specification. This decomposition has two benefits:
+where $V\_{\text{residual}}$ is the small parametric potential (wells + SARF + PARF + context coupling) from the EOM specification. This decomposition has two benefits:
 
 1. **The harvested potential handles the bulk of the energy landscape** — attractor positions, basin depths, and rough force profiles are already calibrated by Algorithm A on corpus data.
 2. **The residual potential handles the simulator-specific corrections** — aspects of the dynamics that the transformer-backed training could not surface (e.g., trajectory-level properties, basin stability).
@@ -826,8 +826,8 @@ The modification is incremental, not disruptive: the existing codebase gains a `
 - Leimkuhler, B., Matthews, C. (2013). *Rational construction of stochastic numerical methods for molecular sampling*. AMRX.
 - Leimkuhler, B., Matthews, C. (2015). *Molecular Dynamics with Deterministic and Stochastic Numerical Methods*. Springer.
 - Huang, LeCun, Balestriero. *Semantic Tensor Product*. arXiv:2602.22617.
-- Gueorguiev, D. P. (2026a). *Semantic Simulator EOM* (`Semantic_Simulator_EOM.md`).
-- Gueorguiev, D. P. (2026b). *Semantic Simulator with RL-calibrated Force Fields: a programme memo* (`Semantic_Simulator_RL_Calibration_Programme.md`).
-- Gueorguiev, D. P. (2026c). *Efficient Numerical Algorithms on CUDA-Enabled GPUs for Dynamical-System–Based Semantic Simulation* (`Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md`).
-- Gueorguiev, D. P. (2026d). *Expressivity Bounds for the v0 Simulator* (`Expressivity_Bounds_For_v0_Simulator.md`).
-- Gueorguiev, D. P. (2026e). *Advancing the Dynamic Simulation Model* (`Advancing_The_Dynamic_Simulation_Model.md`).
+- Gueorguiev, D. P. (2026a). *Semantic Simulator EOM* (`docs/Semantic_Simulator_EOM.md`).
+- Gueorguiev, D. P. (2026b). *Semantic Simulator with RL-calibrated Force Fields: a programme memo* (`docs/Semantic_Simulator_RL_Calibration_Programme.md`).
+- Gueorguiev, D. P. (2026c). *Efficient Numerical Algorithms on CUDA-Enabled GPUs for Dynamical-System–Based Semantic Simulation* (`docs/Efficient_Numerical_Algorithm_on_GPU_for_Dynamical_System_based_Models.md`).
+- Gueorguiev, D. P. (2026d). *Expressivity Bounds for the v0 Simulator* (`docs/Expressivity_Bounds_For_v0_Simulator.md`).
+- Gueorguiev, D. P. (2026e). *Advancing the Dynamic Simulation Model* (`docs/Advancing_The_Dynamic_Simulation_Model.md`).

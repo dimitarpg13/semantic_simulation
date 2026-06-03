@@ -2,6 +2,8 @@
 
 **Work in progress — last updated May 2026 (Section 10 added: v3 leak-free findings)**
 
+> **Rendering note.** This document contains LaTeX math (inline `$...$` and display `$$...$$` blocks, with macros such as `\mathfrak{...}`, `\boldsymbol{...}`, `\mathcal{...}`, etc.). The math has been verified to render correctly in **Safari**. In **Chrome** some symbols — notably calligraphic and fraktur letters, e.g. `\mathfrak{C}` rendering as a plain `C` instead of $\mathfrak{C}$ — appear to render incorrectly. **Firefox** has not been tested. If symbols look wrong, please view the document in Safari or consult the main paper's PDF, where the same symbols are typeset by LaTeX directly.
+
 ---
 
 ## Abstract
@@ -353,7 +355,7 @@ The table below collects the formal identifications:
 | $H^{\ast}$: radius of feasibility sphere | $\lVert\tilde{H}\rVert_F$: total representation spread | $H^{\ast} \leftrightarrow \lVert\tilde{H}\rVert_F$ |
 | $\mathfrak{S}^{\ast}$: feasibility ellipsoid | $\mathcal{E}_{PCA}$: covariance ellipsoid | $\sigma_i^{\ast} \leftrightarrow \sigma_{H,i}$ |
 | Effective rank of $P$ | $k^{\ast}$: optimal PCA dimensionality for well fit | Effective rank $\leftrightarrow k^{\ast}$ |
-| $\vec{v}_1$: principal axis of property | $\vec{v}_{H,1}$: principal axis of trajectory | Should align with well axis |
+| $\vec{v}\_1$: principal axis of property | $\vec{v}\_{H,1}$: principal axis of trajectory | Should align with well axis |
 
 The correspondence is not merely analogical — it is structural. Both decompositions perform the same mathematical operation (SVD of a centered data matrix), and the quantities they produce (singular values, singular vectors, entropy, effective rank, feasibility ellipsoid) have the same functional form. What the Semantic Simulation framework axiomatizes for semantic properties, the PCA of hidden states measures empirically in the transformer's representations. If the conjecture is correct, the transformer *learns* representations whose SVD structure mirrors the SVD structure that the Signature Matrix *defines* — and the PCA experiment proposed in Section 9.1.1 is the direct test of this identification.
 
@@ -375,7 +377,7 @@ The conjecture connects several independent lines of research:
 
 ## 7. Preliminary Experimental Validation (GPT-2 Baseline)
 
-A first experimental validation of the conjecture was carried out using the protocol described in Section 4.2. The purpose of this run was twofold: to verify that the computational pipeline produces meaningful quantities, and to obtain a baseline measurement against which results from larger models can be compared. The full implementation is available in the `stp_loss/energy_landscape_validation` notebook (see the main `semsimula` repository).
+A first experimental validation of the conjecture was carried out using the protocol described in Section 4.2. The purpose of this run was twofold: to verify that the computational pipeline produces meaningful quantities, and to obtain a baseline measurement against which results from larger models can be compared. The full implementation is available in `notebooks/stp_loss/energy_landscape_validation.ipynb`.
 
 ### 7.1 Experimental Configuration
 
@@ -402,7 +404,7 @@ GPT-2 was chosen as a deliberately weak baseline. It is a 2019-era model with no
 
 The per-token NTP loss across all 50 trajectories has mean 3.67, standard deviation 2.97, and range [0.0001, 14.62]. The distribution is right-skewed, with most tokens predicted at moderate loss and a tail of high-loss tokens corresponding to rare or context-dependent words.
 
-<img src="images/exp_gpt2_energy_proxy.png" width="85%">
+<img src="../notebooks/stp_loss/results/stage2_energy_proxy.png" width="85%">
 
 **Figure 2**: Per-token NTP loss (energy proxy) across token positions for five semantic domains (five representative trajectories shown per domain), and the aggregate density distribution (lower right). The energy proxy is highly variable within and across trajectories.
 
@@ -418,7 +420,7 @@ Three potential models were fitted to the pooled (distance, energy) data from al
 
 The Gaussian well achieves the lowest AIC by a substantial margin: 382 points below the linear model and 933 points below the harmonic model. However, the $R^2$ is effectively zero for all three models, indicating that none of them explain meaningful variance in the raw scatter.
 
-<img src="images/exp_gpt2_global_fit.png" width="85%">
+<img src="../notebooks/stp_loss/results/stage4_global_fit.png" width="85%">
 
 **Figure 3**: Energy proxy vs. Euclidean distance from trajectory center, with fitted curves for all three potential models. The Gaussian well (red) saturates at $a \approx 3.67$; the harmonic (blue dashed) and linear (green dash-dot) diverge. The data scatter is large relative to the fitted signal.
 
@@ -428,7 +430,7 @@ The AIC result deserves careful interpretation. The Gaussian well wins not becau
 
 The empirical restoring force, estimated by binning the distance-energy data and computing $-dV/dx$ numerically, was compared against the theoretical Gaussian well force profile $F(x) = 2ab \cdot x \cdot e^{-bx^2}$.
 
-<img src="images/exp_gpt2_restoring_force.png" width="85%">
+<img src="../notebooks/stp_loss/results/stage4_restoring_force.png" width="85%">
 
 **Figure 4**: Left: Binned mean energy proxy as a function of distance from center, with the fitted Gaussian well curve. Right: Empirical restoring force (black) compared to the theoretical force profile (red). The empirical force oscillates around zero with no clear resemblance to the predicted peak structure.
 
@@ -446,7 +448,7 @@ The Gaussian well was fitted separately for each semantic domain:
 | Code description | 4.05 | 0.005 | 0.003 |
 | Conversational | 3.37 | 0.006 | 0.001 |
 
-<img src="images/exp_gpt2_domain_fits.png" width="85%">
+<img src="../notebooks/stp_loss/results/stage4_domain_fits.png" width="85%">
 
 **Figure 5**: Per-domain scatter plots with fitted Gaussian well curves, and a comparison of fitted well parameters across domains (lower right). Mathematics and narrative produce wells with $\kappa^2 \approx 0.07$, while scientific, code, and conversational produce wells with $\kappa^2 \approx 0.005$ — a factor of 14 difference.
 
@@ -468,7 +470,7 @@ Using the global Gaussian well parameters ($a = 3.669$, $b = 0.083$), the Lagran
 | Pearson $r$ (STP loss, action) | 0.190 | $p = 0.186$ |
 | Spearman $\rho$ (STP loss, action) | 0.239 | $p = 0.094$ |
 
-<img src="images/exp_gpt2_lagrangian_analysis.png" width="85%">
+<img src="../notebooks/stp_loss/results/stage5_lagrangian_analysis.png" width="85%">
 
 **Figure 6**: Left: STP loss vs. total action, colored by domain, with Pearson $r = 0.190$ and Spearman $\rho = 0.239$. Center: Virial-like diagram showing mean kinetic vs. mean potential energy per trajectory. Right: Action distribution by domain.
 
@@ -476,7 +478,7 @@ The correlation between STP loss and total action is positive, as predicted, but
 
 The virial-like diagram (Figure 6, center) reveals a striking imbalance: mean kinetic energy exceeds mean potential energy by 2-3 orders of magnitude for every trajectory. In classical mechanics, $T \gg V$ indicates an unbound system — the particles have far more kinetic energy than the well can contain. This is visible in the per-trajectory dynamics profiles:
 
-<img src="images/exp_gpt2_trajectory_profiles.png" width="70%">
+<img src="../notebooks/stp_loss/results/stage5_trajectory_profiles.png" width="70%">
 
 **Figure 7**: Kinetic energy $T_t$ (blue), potential energy $V_t$ (orange, near zero), and Lagrangian $\mathcal{L}_t = T - V$ (black dashed) along representative trajectories from each domain. The potential energy is negligible relative to the kinetic energy at every token position.
 
@@ -703,7 +705,7 @@ The experiments in Sections 7–8 extracted hidden states only from the last tra
 
 ### 9.4 Phase 4 — STP Fine-Tuning Comparison (Priority: Medium)
 
-The strongest test of the conjecture is Prediction 3 (Section 3.3): fine-tune the same base model with $\mathcal{L}_{NTP}$ only and with $\mathcal{L}_{NTP} + \lambda \cdot \mathcal{L}_{STP}$, then compare the Gaussian well fit quality. If the conjecture holds, the STP-trained model should exhibit:
+The strongest test of the conjecture is Prediction 3 (Section 3.3): fine-tune the same base model with $\mathcal{L}\_{NTP}$ only and with $\mathcal{L}\_{NTP} + \lambda \cdot \mathcal{L}\_{STP}$, then compare the Gaussian well fit quality. If the conjecture holds, the STP-trained model should exhibit:
 
 - Higher $R^2$ for the Gaussian well fit
 - Deeper wells (larger $a$)
@@ -747,13 +749,13 @@ The short version: **the conjecture survives unchanged in form and is empiricall
 
 ### 10.1 What the leak fix changed (and what it did not)
 
-A causal-leak bug in the SPLM training pipeline (the $\xi$ channel of `model_ln.py` computed its causal cumulative mean from `h` rather than from `h.detach()`, opening an anti-causal autograd path through which the integrator routed prediction signal that should have flowed through the conservative gradient channel) inflated the v2 reported SPLM perplexities and shifted the empirical optimum of the damping coefficient. The fix is one line: `xi_input = h.detach() if cfg.causal_force else h`. The retrain pass ran every SPLM-side experiment under `cfg.causal_force = True` with otherwise identical hyperparameters, integrator, architecture, mass prior, data, and token budget. See the causal-leak bug analysis for details, the five-seed confirmation sweep for the retrain results, and the reanchored $\gamma^{\ast}$-prediction framework (§2.5) for the updated calibration constants.
+A causal-leak bug in the SPLM training pipeline (the $\xi$ channel of `model_ln.py` computed its causal cumulative mean from `h` rather than from `h.detach()`, opening an anti-causal autograd path through which the integrator routed prediction signal that should have flowed through the conservative gradient channel) inflated the v2 reported SPLM perplexities and shifted the empirical optimum of the damping coefficient. The fix is one line: `xi_input = h.detach() if cfg.causal_force else h`. The retrain pass ran every SPLM-side experiment under `cfg.causal_force = True` with otherwise identical hyperparameters, integrator, architecture, mass prior, data, and token budget. See [`Causal_Leak_in_SPLM_Integrate_Bug_and_Fix.md`](Causal_Leak_in_SPLM_Integrate_Bug_and_Fix.md) for the bug analysis, the $S = 5$ confirmation sweep results under `notebooks/conservative_arch/ln_damping_sweep/results/leakfree_5seed_confirmation/`, and [`Determining_optimal_gamma_for_SPLM.md`](Determining_optimal_gamma_for_SPLM.md) §2.5 for the reanchored calibration constants.
 
 The leak fix corrupted three quantities and three only:
 
 1. The empirical optimal damping shifted from $\gamma^{\ast} = 0.30$ (buggy v2) to $\gamma^{\ast} \in [0.10, 0.15]$ (leak-free, $S = 5$ confirmation sweep).
 2. The absolute size of the SPLM-2 vs SPLM-1 first-order-ablation paired perplexity gap shrank from ${\sim}{+}23$ PPL (buggy) to ${+}5.09$ PPL at $\gamma = 0.10$ and ${+}7.03$ PPL at $\gamma = 0.15$ (leak-free, $S = 5$, all four pre-registered decision criteria satisfied).
-3. The empirical calibration constants of the four $\gamma^{\ast}$-estimators had to be reanchored — most visibly the depth-scaling kinetic-energy retention factor $\rho$ shifted from $0.18$ to $0.565$.
+3. The empirical calibration constants of the four $\gamma^{\ast}$-estimators in [`Determining_optimal_gamma_for_SPLM.md`](Determining_optimal_gamma_for_SPLM.md) had to be reanchored — most visibly the depth-scaling kinetic-energy retention factor $\rho$ shifted from $0.18$ to $0.565$.
 
 The leak fix did **not** affect:
 
@@ -767,19 +769,19 @@ The leak fix did **not** affect:
 
 Three measurements from the leak-free retrain pass speak directly to the conjecture stated in Section 2.1 and to the tests proposed in Section 3:
 
-**(a) Shared-potential separator regression on a leak-free SPLM-2 checkpoint**. On the LayerNorm-after-step SPLM-2 checkpoint at the leak-free inference-optimal $\gamma^{\ast} = 0.10$, jointly fitting a *single* scalar potential network $V_{\psi}(h)$ plus per-layer scalars $\alpha_{\ell}, \beta_{\ell}$ to the residual
+**(a) Shared-potential separator regression on a leak-free SPLM-2 checkpoint** (`notebooks/conservative_arch/results/sharedV_em_ln_leakfree_gamma0p10_seed0_summary.md` in the companion repository). On the LayerNorm-after-step SPLM-2 checkpoint at the leak-free inference-optimal $\gamma^{\ast} = 0.10$, jointly fitting a *single* scalar potential network $V_{\psi}(h)$ plus per-layer scalars $\alpha_{\ell}, \beta_{\ell}$ to the residual
 
 $$\Delta h_{\ell} - \alpha_{\ell} v_{\ell} + \beta_{\ell} \nabla V_{\psi}(h_{\ell})$$
 
 across every layer $\ell \geq 1$, every token, and every training sentence yields **median per-layer test $R^{2} = 0.949$** (range across layers $[0.925, 0.960]$, $7$ layers, $L = 8$, $d = 128$, $v_{\mathrm{hidden}} = 512$). The buggy v2 measurement at the same regression configuration was median per-layer test $R^{2} = 0.90$. The leak fix therefore *improves* the separator $R^{2}$ by ${\sim}0.05$ — consistent with the integrator bug having modestly reduced the structural cleanliness of SPLM trajectories (it routed some prediction signal through the anti-causal $\xi$ channel rather than through the conservative gradient-of-$V_{\theta}$ channel that the regression measures), so that under causal honesty the trajectories sit *closer* to the regression's ansatz $\Delta h_{\ell} \approx \alpha_{\ell} v_{\ell} - \beta_{\ell} \nabla V_{\psi}(h_{\ell})$ than they did under the buggy integrator. Concretely, the leak fix turned a noisy structural signature into a clean one, and the cleaned signature directly supports Section 2.1 conjecture point 1 ("$V(h)$ has local minima at semantically coherent hidden states") at the structural level: a single shared scalar field $V_{\psi}$ explains $94$–$96\%$ of the layer-by-layer hidden-state displacement after accounting for the velocity term.
 
-**(b) Resonance-predictor double success** (see the $\gamma^{\ast}$-prediction reanchoring results and §2.5 of the damping-prediction framework). The four-estimator framework that predicts $\gamma^{\ast}$ from the architecture and the corpus — depth-scaling, Hessian-spectrum critical damping, and corpus-surprisal scaling — was rerun on a leak-free checkpoint. The depth-scaling closed form $\gamma^{\ast}_{\mathrm{depth}}(\rho)$ predicts $\gamma^{\ast} = 0.316$ at $\rho = 0.18$ (the buggy v2 anchor) and $\gamma^{\ast} = 0.105$ at $\rho = 0.565$ (the leak-free anchor). The same single-parameter functional form therefore reproduces both the buggy and the leak-free empirical optima to three decimal places, with only the kinetic-energy retention factor $\rho$ shifting between regimes. This is the strongest available cross-regime evidence that the *form* of the second-order Lagrangian theory in Section 1.4 is correct: a wrong functional form would not have survived a $3\times$ shift in $\gamma^{\ast}$ with a single recalibration, and would not have agreed with the empirical optimum to three decimals at the new anchor.
+**(b) Resonance-predictor double success** (`notebooks/conservative_arch/scaleup/gamma_transfer/results/leakfree_gamma0p10_seed0/predict_gamma_summary.md` in the companion repository, and [`Determining_optimal_gamma_for_SPLM.md`](Determining_optimal_gamma_for_SPLM.md) §2.5). The four-estimator framework that predicts $\gamma^{\ast}$ from the architecture and the corpus — depth-scaling, Hessian-spectrum critical damping, and corpus-surprisal scaling — was rerun on a leak-free checkpoint. The depth-scaling closed form $\gamma^{\ast}_{\mathrm{depth}}(\rho)$ predicts $\gamma^{\ast} = 0.316$ at $\rho = 0.18$ (the buggy v2 anchor) and $\gamma^{\ast} = 0.105$ at $\rho = 0.565$ (the leak-free anchor). The same single-parameter functional form therefore reproduces both the buggy and the leak-free empirical optima to three decimal places, with only the kinetic-energy retention factor $\rho$ shifting between regimes. This is the strongest available cross-regime evidence that the *form* of the second-order Lagrangian theory in Section 1.4 is correct: a wrong functional form would not have survived a $3\times$ shift in $\gamma^{\ast}$ with a single recalibration, and would not have agreed with the empirical optimum to three decimals at the new anchor.
 
-**(c) $S = 5$ confirmation sweep of the SPLM-2 vs SPLM-1 paired gap**. Across $\gamma \in \{0.05, 0.10, 0.15, 0.20\}$ at $S = 5$ seeds per cell, the paired SPLM-2 minus SPLM-1 perplexity gap at the inference-optimal $\gamma^{\ast} = 0.10$ is $\bar{\Delta} = +5.09$ PPL (paired-$t = +5.30$, $d_{z} = +2.37$, two-sided $p = 0.006$, sign-consistent $5/5$), and the largest paired gap is at $\gamma = 0.15$ at $\bar{\Delta} = +7.03$ PPL (paired-$t = +4.23$, $d_{z} = +1.89$, $p = 0.013$, sign-consistent $5/5$). All four pre-registered decision criteria (paired-$t$ significance, effect-size threshold, sign-consistency, magnitude bar $\bar{\Delta} \geq 5.0$ PPL) are satisfied simultaneously at $\gamma \in \{0.10, 0.15\}$. Architecturally, this confirms that the second-order theory carries genuinely additional generative content beyond the first-order ablation under causal honesty, even though the buggy $+23$ PPL gap was inflated by ${\sim}4.5\times$. Substantively, this is what one expects if first-order STP is the overdamped ($\gamma \to \infty$) reduction of the underlying second-order Lagrangian: the gap to a model that retains explicit mass and underdamped dynamics should be present, modest, and concentrated near the system's natural-frequency basin — exactly what the $S = 5$ sweep shows.
+**(c) $S = 5$ confirmation sweep of the SPLM-2 vs SPLM-1 paired gap** (`notebooks/conservative_arch/ln_damping_sweep/results/leakfree_5seed_confirmation/RESULTS_CONFIRMATION_S5.md` in the companion repository). Across $\gamma \in \{0.05, 0.10, 0.15, 0.20\}$ at $S = 5$ seeds per cell, the paired SPLM-2 minus SPLM-1 perplexity gap at the inference-optimal $\gamma^{\ast} = 0.10$ is $\bar{\Delta} = +5.09$ PPL (paired-$t = +5.30$, $d_{z} = +2.37$, two-sided $p = 0.006$, sign-consistent $5/5$), and the largest paired gap is at $\gamma = 0.15$ at $\bar{\Delta} = +7.03$ PPL (paired-$t = +4.23$, $d_{z} = +1.89$, $p = 0.013$, sign-consistent $5/5$). All four pre-registered decision criteria (paired-$t$ significance, effect-size threshold, sign-consistency, magnitude bar $\bar{\Delta} \geq 5.0$ PPL) are satisfied simultaneously at $\gamma \in \{0.10, 0.15\}$. Architecturally, this confirms that the second-order theory carries genuinely additional generative content beyond the first-order ablation under causal honesty, even though the buggy $+23$ PPL gap was inflated by ${\sim}4.5\times$. Substantively, this is what one expects if first-order STP is the overdamped ($\gamma \to \infty$) reduction of the underlying second-order Lagrangian: the gap to a model that retains explicit mass and underdamped dynamics should be present, modest, and concentrated near the system's natural-frequency basin — exactly what the $S = 5$ sweep shows.
 
 A fourth measurement is mildly cautionary rather than supportive:
 
-**(d) Gaussian-mixture-head replacement still fails under causal honesty**. The `em_gm` variant replaces the unbounded MLP $V_{\theta}$ head with an explicit sum of $K = 64$ Gaussian wells. Under leak-free training it reaches val_PPL $= 542.65$, freely-trained $\gamma = 0.668$, attractor counts $K^{\ast} = (2,2,2,2,2)$ across the five prompt domains, and a content-basin fraction of $0.00$ — i.e. every attractor it finds is a punctuation/whitespace basin. The two MLP-head leak-free variants (`em_ln` at val_PPL $\approx 173$–$245$ depending on free vs. fixed $\gamma$, and the scale-gauge `em_sg` at val_PPL $\approx 245$ with attractor diversity $K^{\ast} = (7,5,4,5,5)$ and content fraction $0.52$) outperform `em_gm` by a factor of ${\sim}2$–$3\times$ in PPL and decisively in attractor coverage. This is not a refutation of the conjecture as stated in Section 2.1 (the conjecture says the well structure is *Gaussian-shaped*, not that the implementation must be a finite explicit mixture of Gaussians), but it does say that whatever the empirical SPLM potential is, it has structure beyond what a $K = 64$ mixture of fixed Gaussian wells captures. The most natural reconciliation is the one already implied by the separator regression of (a): the empirical $V_{\psi}$ is shaped *like* a Gaussian well in its conservative core (bounded, smooth, single-well per attractor basin) but is not literally a finite sum of fixed Gaussians.
+**(d) Gaussian-mixture-head replacement still fails under causal honesty** (`notebooks/conservative_arch/energetic_minima/results/em_gm_K64_shakespeare_summary.md` and the cross-variant comparison in the same directory's `comparison_report.md`). The `em_gm` variant replaces the unbounded MLP $V_{\theta}$ head with an explicit sum of $K = 64$ Gaussian wells. Under leak-free training it reaches val_PPL $= 542.65$, freely-trained $\gamma = 0.668$, attractor counts $K^{\ast} = (2,2,2,2,2)$ across the five prompt domains, and a content-basin fraction of $0.00$ — i.e. every attractor it finds is a punctuation/whitespace basin. The two MLP-head leak-free variants (`em_ln` at val_PPL $\approx 173$–$245$ depending on free vs. fixed $\gamma$, and the scale-gauge `em_sg` at val_PPL $\approx 245$ with attractor diversity $K^{\ast} = (7,5,4,5,5)$ and content fraction $0.52$) outperform `em_gm` by a factor of ${\sim}2$–$3\times$ in PPL and decisively in attractor coverage. This is not a refutation of the conjecture as stated in Section 2.1 (the conjecture says the well structure is *Gaussian-shaped*, not that the implementation must be a finite explicit mixture of Gaussians), but it does say that whatever the empirical SPLM potential is, it has structure beyond what a $K = 64$ mixture of fixed Gaussian wells captures. The most natural reconciliation is the one already implied by the separator regression of (a): the empirical $V_{\psi}$ is shaped *like* a Gaussian well in its conservative core (bounded, smooth, single-well per attractor basin) but is not literally a finite sum of fixed Gaussians.
 
 ### 10.3 Bearing on the four (and a half) predictions of Section 3
 
@@ -815,14 +817,18 @@ Both tightenings preserve every conclusion of Sections 2, 3, 5, 7, 8, and 9. The
 
 The conjecture stated in Section 2.1 is unchanged. The four predictions of Section 3 are unchanged. The Signature-Matrix–PCA correspondence of Section 5.3 is unchanged. The two GPT-2 experiments of Sections 7–8 are leak-immune and stand verbatim. The action plan of Section 9 is unchanged in its primary thrust (Llama-3.2-1B as the next test subject, PCA projection as the next methodological refinement) and is augmented by Criterion 6 above.
 
-The single most important consequence of the v3 leak-free retrain pass for *this* document is the addition of a mechanism: STP is now identifiable as the overdamped ($\gamma \to \infty$) reduction of the second-order Lagrangian dynamics whose conservative core is captured by the Gaussian-well-shaped scalar potential. Section 2.1 conjecture point 4 ("$\mathcal{L}_{STP}$ is a proxy for the deviation from action-minimising trajectories") becomes, under this mechanism, the precise claim that $\mathcal{L}_{STP} \to 0$ enforces the overdamped limit of the same Euler-Lagrange equations whose underdamped variant is what trained SPLM-2 actually solves.
+The single most important consequence of the v3 leak-free retrain pass for *this* document is the addition of a mechanism: STP is now identifiable as the overdamped ($\gamma \to \infty$) reduction of the second-order Lagrangian dynamics whose conservative core is captured by the Gaussian-well-shaped scalar potential. Section 2.1 conjecture point 4 ("$\mathcal{L}\_{STP}$ is a proxy for the deviation from action-minimising trajectories") becomes, under this mechanism, the precise claim that $\mathcal{L}\_{STP} \to 0$ enforces the overdamped limit of the same Euler-Lagrange equations whose underdamped variant is what trained SPLM-2 actually solves.
 
 ### 10.7 Pointers to canonical sources
 
-- Causal-leak bug analysis and fix: see the main `semsimula` repository for full details.
-- Reanchored $\gamma^{\ast}$-prediction framework (§2.5, leak-correction calibration): see the main `semsimula` repository.
-- $S = 5$ confirmation sweep: see the main `semsimula` repository experimental results.
-- Four-corner synthesis (descriptive / structural / prescriptive / predictive evidence for the second-order theory under causal honesty): see the paper §15 (Conservative Architectures).
+- Causal-leak bug analysis and fix: [`Causal_Leak_in_SPLM_Integrate_Bug_and_Fix.md`](Causal_Leak_in_SPLM_Integrate_Bug_and_Fix.md).
+- Reanchored $\gamma^{\ast}$-prediction framework: [`Determining_optimal_gamma_for_SPLM.md`](Determining_optimal_gamma_for_SPLM.md) §2.5 (leak-correction calibration).
+- $S = 5$ confirmation sweep: `notebooks/conservative_arch/ln_damping_sweep/results/leakfree_5seed_confirmation/RESULTS_CONFIRMATION_S5.md`.
+- Tier 0.5 ($\gamma^{\ast}$-predictor reanchored): `notebooks/conservative_arch/scaleup/gamma_transfer/results/leakfree_gamma0p10_seed0/predict_gamma_summary.md`.
+- Tier 0.6 (shared-potential separator on leak-free SPLM-2): `notebooks/conservative_arch/results/sharedV_em_ln_leakfree_gamma0p10_seed0_summary.md`.
+- Energetic-minima leak-free retrain (`em_ln`, `em_sg`, `em_gm`): `notebooks/conservative_arch/energetic_minima/results/leakfree_tiers_2_3_summary.md` and the cross-variant `comparison_report.md`. See also [`Energetic_Minima_Alternatives.md`](Energetic_Minima_Alternatives.md) §8 (v3 leak-free retrain pass).
+- Cross-variant attractor analysis under leak-free training: see [`Semantic_Attractor_Extraction.md`](Semantic_Attractor_Extraction.md) §12 (v3 leak-free attractor pass).
+- Four-corner synthesis (descriptive / structural / prescriptive / predictive evidence for the second-order theory under causal honesty): `paper_v3/sections/15_conservative_architectures.tex`, paragraph "Relationship to first-order accounts (STP, Lu et al.) under causal honesty."
 
 ---
 
@@ -842,4 +848,4 @@ The single most important consequence of the v3 leak-free retrain pass for *this
 
 [7] Y. LeCun, S. Chopra, R. Hadsell, M. Ranzato, F. Huang, "A Tutorial on Energy-Based Learning," in Predicting Structured Data, MIT Press, 2006.
 
-[8] "On the Interpretation of Semantic Mass in Terms of Transformer Mechanisms," 2026 (companion document: `On_the_Interpretation_of_Semantic_Mass.md`).
+[8] "On the Interpretation of Semantic Mass in Terms of Transformer Mechanisms," 2026 (companion note: [`On_the_Interpretation_of_Semantic_Mass.md`](On_the_Interpretation_of_Semantic_Mass.md)).

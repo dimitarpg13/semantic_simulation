@@ -6,7 +6,7 @@ every parameter classified as static (corpus statistics),
 RL-calibrated, or a hyperparameter.
 
 This is **M0** of the programme defined in
-`Semantic_Simulator_RL_Calibration_Programme.md`. The purpose of
+`docs/Semantic_Simulator_RL_Calibration_Programme.md`. The purpose of
 this document is to translate the framework's narrative description
 (paper §2–§8 plus §11–§12) into a single block of unambiguous
 equations and pseudocode, so that every under-specification surfaces
@@ -57,7 +57,7 @@ maintains:
 | $x_t^{(\ell)}$ | $\mathbb{R}^d$ | Particle position, position $t$, step $\ell$ |
 | $\dot{x}_t^{(\ell)}$ | $\mathbb{R}^d$ | Particle velocity |
 | $\xi_t$ | $\mathbb{R}^d$ | Causal cumulative mean of input embeddings |
-| $\mathfrak{m}_t$ | $\mathbb{R}_{>0}$ | Per-position semantic mass |
+| $\mathfrak{m}\_t$ | $\mathbb{R}\_{>0}$ | Per-position semantic mass |
 | $V(\xi, x)$ | $\mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$ | Scalar potential |
 | $F(\xi, x) = -\nabla_x V(\xi, x)$ | $\mathbb{R}^d$ | Force |
 | $\gamma$ | $\mathbb{R}_{>0}$ | Damping coefficient |
@@ -592,7 +592,7 @@ the v0 specification doesn't read as if it were the final
 architecture.
 
 Each mechanism has a v# milestone in the broader programme document
-(`Semantic_Simulator_RL_Calibration_Programme.md`, §10).
+(`docs/Semantic_Simulator_RL_Calibration_Programme.md`, §10).
 
 ### 13.1 Destruction / retirement (v1.5: simplest, prototype-first)
 
@@ -687,7 +687,7 @@ already a constant-direction force; *promoting* properties to
 operators (matrices acting on $x$, not just constant force vectors)
 is the natural extension. Non-commutative composition is exactly the
 regime where the Lie-group structure cited in
-`Gueorguiev2025LieGroups`, `BaezMuniain1994`, and `Nakahara2003`
+`BaezMuniain1994` and `Nakahara2003`
 does the heavy lifting.
 
 **Linguistic motivation.** Verbs and other operator-like words act

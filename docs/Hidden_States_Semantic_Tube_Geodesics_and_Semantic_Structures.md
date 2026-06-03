@@ -48,17 +48,17 @@ The following diagram illustrates the structural correspondence between the two 
 ```mermaid
 graph LR
     subgraph STP [Semantic Tube Prediction - Huang et al]
-        A1["Token x_t"] --> B1["Encoder f(·)"]
-        B1 --> C1["Hidden state h_t ∈ ℝ^d"]
+        A1["Token x_t"] --> B1["Encoder f(*)"]
+        B1 --> C1["Hidden state h_t in R^d"]
         C1 --> D1["Geodesic trajectory h*_t"]
         D1 --> E1["STP Loss constrains to tube"]
     end
 
     subgraph SS [Semantic Simulation - Gueorguiev]
         A2["Text quantum"] --> B2["Parsing into particles"]
-        B2 --> C2["Semantic particle in Σ"]
+        B2 --> C2["Semantic particle in Sigma"]
         C2 --> D2["Trajectory toward in-situ position"]
-        D2 --> E2["Energy field 𝔉 guides trajectory"]
+        D2 --> E2["Energy field F guides trajectory"]
     end
 
     A1 -.->|"analog"| A2
@@ -139,13 +139,13 @@ $$\Delta\vec{p}_i = \frac{\vec{p}_E - \vec{p}_{c,i}}{|\vec{p}_E - \vec{p}_{c,i}|
 ```mermaid
 graph TD
     subgraph Huang [Huang et al - Token-Sequential Time]
-        H0["h_0 (BOS)"] --> H1["h_1"] --> H2["h_2"] --> H3["h_3"] --> HN["h_τ (EOS)"]
+        H0["h_0 (BOS)"] --> H1["h_1"] --> H2["h_2"] --> H3["h_3"] --> HN["h_tau (EOS)"]
     end
 
     subgraph Gueorguiev [Gueorguiev - Dynamical Simulation Time]
         G0["P_i at in-situ"] --> G1["P_i(t_1)"] --> G2["P_i(t_2)"] --> G3["P_i(t_3)"]
         G3 --> GN["P_i at bound state"]
-        GN -.->|"H_i → 0 (deceleration)"| GN
+        GN -.->|"H_i -> 0 (deceleration)"| GN
     end
 
     style Huang fill:#fff8f0,stroke:#d2691e
@@ -204,8 +204,8 @@ In classical physics, three formulations of mechanics are mathematically equival
 
 ```mermaid
 graph TD
-    N["Newtonian Mechanics<br>F = m·a<br>(forces, local)"]
-    L["Lagrangian Mechanics<br>δS = 0<br>(action, global/variational)"]
+    N["Newtonian Mechanics<br>F = m*a<br>(forces, local)"]
+    L["Lagrangian Mechanics<br>deltaS = 0<br>(action, global/variational)"]
     H["Hamiltonian Mechanics<br>dH/dt = 0<br>(energy conservation)"]
 
     N <-->|"equivalent"| L
@@ -265,10 +265,10 @@ The equivalence of the Newtonian and Lagrangian formulations means that:
 
 ```mermaid
 graph TD
-    GC["Gueorguiev: Conservation Laws<br>W_net = E_b - E_a"] -->|"construct Lagrangian"| LAG["Lagrangian<br>ℒ = T - V<br>V from Gaussian Inverse Well"]
-    LAG -->|"Euler-Lagrange equations"| EL["Equations of Motion<br>𝔪ẍ = -∂V/∂x"]
-    LAG -->|"δS = 0"| GEO["Geodesic Trajectories<br>(locally linear)"]
-    GEO -->|"first-order consequence"| STP["STP Loss (Huang et al.)<br>1 - cos(h_t - h_r, h_r - h_s) → 0"]
+    GC["Gueorguiev: Conservation Laws<br>W_net = E_b - E_a"] -->|"construct Lagrangian"| LAG["Lagrangian<br>L = T - V<br>V from Gaussian Inverse Well"]
+    LAG -->|"Euler-Lagrange equations"| EL["Equations of Motion<br>mx'' = -dV/dx"]
+    LAG -->|"deltaS = 0"| GEO["Geodesic Trajectories<br>(locally linear)"]
+    GEO -->|"first-order consequence"| STP["STP Loss (Huang et al.)<br>1 - cos(h_t - h_r, h_r - h_s) -> 0"]
 
     style GC fill:#e1ffe1,stroke:#2e8b57
     style LAG fill:#fff8dc,stroke:#daa520
@@ -290,7 +290,7 @@ Semantic structures in the Simulation framework have rich internal composition d
 
 ```mermaid
 graph TD
-    A["Semantic Aspect A_i<br>(type l_i, direction θ_i)"]
+    A["Semantic Aspect A_i<br>(type l_i, direction theta_i)"]
     P["Semantic Property P<br>(signature matrix P = MX)"]
     V["Semantic Particle V<br>(primitive structure)"]
     S["Semantic Structure S<br>(ensemble of particles)"]
@@ -342,11 +342,11 @@ Gueorguiev explicitly separates interactions into two scales [2][6][8]:
 ```mermaid
 graph LR
     subgraph Local [Local Scale - PARF / SARF]
-        P1["Property P₁"] <-->|"attractive<br>force f_ij"| P2["Property P₂"]
+        P1["Property P_1"] <-->|"attractive<br>force f_ij"| P2["Property P_2"]
     end
 
     subgraph Global [Global Scale - Energy Field F]
-        F["𝔉(r⃗, t)"] -->|"guides"| S["Structure S"]
+        F["F(r, t)"] -->|"guides"| S["Structure S"]
         S -->|"alters"| F
     end
 
@@ -356,7 +356,7 @@ graph LR
     style Global fill:#e1f0ff,stroke:#4682b4
 ```
 
-The estimation of attractive forces between structures depends on previously observed instances [6]. Given structures $A_{new}$ and $B$ with prior pairs $A^{prev_i}$ and $B_j^{prev_i}$, the force is estimated from the known forces $f_{i,j} = f_{SARF}(A^{prev_i}, B_j^{prev_i})$ using semantic distances $d_{i,j}$ and masses $\mathfrak{m}_{a_i}$, $\mathfrak{m}_{b_{i,j}}$. This is a fundamentally **empirical-Bayesian** approach — forces between new structures are inferred from statistics of past interactions.
+The estimation of attractive forces between structures depends on previously observed instances [6]. Given structures $A_{new}$ and $B$ with prior pairs $A^{prev_i}$ and $B_j^{prev_i}$, the force is estimated from the known forces $f_{i,j} = f_{SARF}(A^{prev_i}, B_j^{prev_i})$ using semantic distances $d_{i,j}$ and masses $\mathfrak{m}\_{a_i}$, $\mathfrak{m}\_{b_{i,j}}$. This is a fundamentally **empirical-Bayesian** approach — forces between new structures are inferred from statistics of past interactions.
 
 ### 7.2 Correspondence to the Semantic Tube
 
@@ -424,7 +424,7 @@ graph LR
 
     subgraph Gueorguiev [Semantic Simulation - Gueorguiev]
         G1["Axiomatic foundation:<br>mass, energy, signature"]
-        G2["Conservation Laws →<br>Lagrangian → geodesics"]
+        G2["Conservation Laws -><br>Lagrangian -> geodesics"]
         G3["Gaussian Inverse Energy<br>Well: exact potential"]
         G4["Compositional structure:<br>particles, trees, forces"]
     end
