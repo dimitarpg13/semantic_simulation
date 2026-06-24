@@ -48,7 +48,8 @@ Fock-PARFLM family — the analogue of
 12. [Empirical results and OQ-1](#12-empirical-results-and-oq-1)
 13. [Continuous-learning and spawnability properties](#13-continuous-learning-and-spawnability-properties)
 14. [Recommendations](#14-recommendations)
-15. [References](#15-references)
+15. [Interaction with hybrid structured V_theta](#15-interaction-with-hybrid-structured-v_theta)
+16. [References](#16-references)
 
 ---
 
@@ -422,9 +423,46 @@ production run establishes only that the additive structural form trains stably.
    eval + top_k to sidestep the MLP OOM, so the comparison isolates the prior rather than capacity or
    memory.
 
+## 15. Interaction with hybrid structured $V_\theta$
+
+The structured V_phi's stability properties (§10) were validated in
+conjunction with SQ3 quadratic wells and Gaussian wells for $V_\theta$.
+A new **hybrid $V_\theta$** design — Gaussian wells with a quadratic
+background ($\varepsilon \lVert h \rVert^2$) — is now under
+evaluation (see
+[`Structured_VTheta_Design_and_Theory.md`](./Structured_VTheta_Design_and_Theory.md) §13
+and
+[`colab_hybrid_gaussian_quad_vtheta.ipynb`](../notebooks/conservative_arch/scaleup/colab_hybrid_gaussian_quad_vtheta.ipynb)).
+
+The hybrid $V_\theta$ interacts with the structured $V_\phi$ in two
+relevant ways:
+
+1. **Hidden-state scale stabilisation.** The quadratic background
+   $\varepsilon \lVert h \rVert^2$ provides a global restoring force
+   that prevents hidden-state drift far from the origin. This
+   benefits the $V_\phi$ distance kernel directly: the Plummer-softened
+   $1/r$ force (Lever 1, §10) relies on $r$ staying within a
+   reasonable range.  If $V_\theta$ allows hidden states to escape to
+   large $\lVert h \rVert$, pairwise distances grow and the $V_\phi$
+   signal diminishes. The background quadratic ensures that $V_\phi$
+   continues to operate in its designed scale regime even during early
+   training when Gaussian well centres have not yet converged.
+
+2. **Joint stability.** The SQ3 $V_\theta$ blowups documented in
+   [`Training_Instabilities_in_Fock-PARFLM_with_structured_V_theta.md`](./Training_Instabilities_in_Fock-PARFLM_with_structured_V_theta.md) §2–§4
+   were caused by unbounded $V_\theta$ forces — not by $V_\phi$. The
+   structured $V_\phi$ was a **stabilising factor** (bounded force,
+   Plummer softening) during those events. The hybrid $V_\theta$
+   removes the source of the instability while preserving the structured
+   $V_\phi$ pairing, so no $V_\phi$-side changes are required.
+
+All hybrid $V_\theta$ evaluation cells (H1–H7, P1–P7) use
+`structural_competitive` $V_\phi$ as the default, consistent with the
+production configuration.
+
 ---
 
-## 15. References
+## 16. References
 
 ### Internal documents
 
@@ -446,6 +484,9 @@ production run establishes only that the additive structural form trains stably.
   — the 1/r explosion and the stability levers.
 - [`Continuous_Learning_in_Semantic_Simulation-based_models_vs_with_Transformer_models.md`](./Continuous_Learning_in_Semantic_Simulation-based_models_vs_with_Transformer_models.md)
   — §4.5 spawnability (Propositions 6–8), the G6 experiment.
+- [`Structured_VTheta_Design_and_Theory.md`](./Structured_VTheta_Design_and_Theory.md) — §13: hybrid
+  Gaussian + quadratic background structured $V_\theta$ design and evaluation.
+- [`colab_hybrid_gaussian_quad_vtheta.ipynb`](../notebooks/conservative_arch/scaleup/colab_hybrid_gaussian_quad_vtheta.ipynb) — hybrid $V_\theta$ $\varepsilon$-sweep evaluation notebook.
 - [`Structured_VTheta_Design_and_Theory.md`](./Structured_VTheta_Design_and_Theory.md) — the one-body
   analogue of this note.
 - **Implementation:** [`notebooks/conservative_arch/parf/model_parf.py`](../notebooks/conservative_arch/parf/model_parf.py);
