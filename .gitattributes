@@ -41,3 +41,4 @@ literature/articles/Doi-Peliti/Gunnar_Pruessner_field_theory_notes.pdf filter=lf
 literature/articles/Doi-Peliti/Path_integral_approach_to_birth-death_processes_on_a_lattice_Peliti_1985.pdf filter=lfs diff=lfs merge=lfs -text
 literature/articles/Sinkhorn_optimal_transport/Computational_Optimal_Transport_Pyere_Cuturi_2019.pdf filter=lfs diff=lfs merge=lfs -text
 literature/articles/Sinkhorn_optimal_transport/Concerning_nonnegative_matrices_and_doubly_stochastic_matrices_Sinkhorn_Knopp_1967.pdf filter=lfs diff=lfs merge=lfs -text
+literature/articles/Sinkhorn_optimal_transport/Sinkformers-Transformers_with_Doubly_Stochastic_Attention_Sander_2022.pdf filter=lfs diff=lfs merge=lfs -text
