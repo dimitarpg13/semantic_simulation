@@ -50,3 +50,6 @@ literature/articles/optimal_transport_and_Sinkhorn_algorithm/NeurIPS-2020-entrop
 docs/images/fock_expressivity_ladder.png filter=lfs diff=lfs merge=lfs -text
 docs/images/fock_three_causal_leaks.png filter=lfs diff=lfs merge=lfs -text
 docs/images/fock_v21_register_lifecycle.png filter=lfs diff=lfs merge=lfs -text
+docs/fock-parflm/images/fock_expressivity_ladder.png filter=lfs diff=lfs merge=lfs -text
+docs/fock-parflm/images/fock_three_causal_leaks.png filter=lfs diff=lfs merge=lfs -text
+docs/fock-parflm/images/fock_v21_register_lifecycle.png filter=lfs diff=lfs merge=lfs -text
