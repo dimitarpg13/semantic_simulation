@@ -41,7 +41,7 @@ The **v0 Expressivity Ceiling** (Theorem v0-ceiling) states that a depth-$L$ SPL
 The Fock mechanism escapes this ceiling by introducing **latent register particles** that can be dynamically created and destroyed, providing unbounded hierarchical working memory. With a LIFO activation discipline, the system implements a pushdown automaton.
 
 <p align="center">
-<img src="../images/fock_expressivity_ladder.png" width="500">
+<img src="images/fock_expressivity_ladder.png" width="500">
 </p>
 <p align="center"><em>Figure 1: The R6 expressivity ladder. The Fock mechanism lifts scalar-potential models past the v0 ceiling at R4 (pushdown automaton) and R5 (full attention equivalent via the reverse channel).</em></p>
 
@@ -75,7 +75,7 @@ flowchart TB
 ```
 
 <p align="center">
-<img src="../images/fock_v21_register_lifecycle.png" width="550">
+<img src="images/fock_v21_register_lifecycle.png" width="550">
 </p>
 <p align="center"><em>Figure 2: The six-stage register lifecycle per layer. Registers flow downward through creation, dynamics, and destruction; tokens participate in stages 1, 4, and 5.</em></p>
 
@@ -554,7 +554,7 @@ Keeping the repulsion out of `forward()` guarantees it never enters the eval PPL
 Autoregressive language models require strict left-to-right causality: the prediction at position $t$ must depend only on tokens $x_{1:t}$. The SPLM family introduced three distinct violations during development.
 
 <p align="center">
-<img src="../images/fock_three_causal_leaks.png" width="700">
+<img src="images/fock_three_causal_leaks.png" width="700">
 </p>
 <p align="center"><em>Figure 3: The three causal leaks and their fixes. L1 affects the integrator context; L2 affects the creation softmax; L3 affects the shared register state via the reverse channel.</em></p>
 
