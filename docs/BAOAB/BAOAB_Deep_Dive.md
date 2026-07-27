@@ -34,15 +34,15 @@ For a particle of mass $m$ moving in potential $U(q)$, coupled to a heat bath at
 
 $$
 \begin{aligned}
-dq &= \frac{p}{m}\,dt \\[4pt]
-dp &= -\nabla U(q)\,dt \;-\; \gamma\, p\, dt \;+\; \sqrt{2\gamma m k_BT}\;dW_t
+dq &= \frac{p}{m} dt \\[4pt]
+dp &= -\nabla U(q) dt - \gamma p dt + \sqrt{2\gamma m k_BT} dW_t
 \end{aligned}
 $$
 
-where $W_t$ is a standard Wiener process. This is a Hamiltonian system, $H(q,p) = \tfrac{p^2}{2m} + U(q)$, with two extra terms grafted onto the momentum equation: a deterministic drag $-\gamma p$ and a stochastic kick $\sqrt{2\gamma m k_BT}\,dW_t$. The fluctuation–dissipation relation between these two terms is exactly what guarantees the correct stationary distribution:
+where $W_t$ is a standard Wiener process. This is a Hamiltonian system, $H(q,p) = \tfrac{p^2}{2m} + U(q)$, with two extra terms grafted onto the momentum equation: a deterministic drag $-\gamma p$ and a stochastic kick $\sqrt{2\gamma m k_BT} dW_t$. The fluctuation–dissipation relation between these two terms is exactly what guarantees the correct stationary distribution:
 
 $$
-\pi(q,p) \;\propto\; \exp\!\left(-\frac{H(q,p)}{k_BT}\right) \;=\; \exp\!\left(-\frac{p^2/2m + U(q)}{k_BT}\right)
+\pi(q,p) \propto \exp\left(-\frac{H(q,p)}{k_BT}\right) = \exp\left(-\frac{p^2/2m + U(q)}{k_BT}\right)
 $$
 
 As $\gamma \to 0$ the friction and noise vanish and Langevin dynamics reduces to pure Hamiltonian (energy-conserving) flow. As $\gamma \to \infty$ it reduces to overdamped (Brownian/Smoluchowski) dynamics. BAOAB is built to remain accurate across this entire range.
@@ -52,21 +52,21 @@ As $\gamma \to 0$ the friction and noise vanish and Langevin dynamics reduces to
 The Fokker–Planck generator associated with the SDE above decomposes additively into three pieces:
 
 $$
-\mathcal{L} \;=\; \mathcal{L}_A + \mathcal{L}_B + \mathcal{L}_O
+\mathcal{L} = \mathcal{L}\_A + \mathcal{L}\_B + \mathcal{L}\_O
 $$
 
 $$
-\mathcal{L}_A = \frac{p}{m}\frac{\partial}{\partial q}\,,
+\mathcal{L}_A = \frac{p}{m}\frac{\partial}{\partial q},
 \qquad
-\mathcal{L}_B = -\nabla U(q)\frac{\partial}{\partial p}\,,
+\mathcal{L}_B = -\nabla U(q)\frac{\partial}{\partial p},
 \qquad
 \mathcal{L}_O = -\gamma p \frac{\partial}{\partial p} + \gamma m k_BT \frac{\partial^2}{\partial p^2}
 $$
 
-$\mathcal L_A$ generates free drift, $\mathcal L_B$ generates the conservative force kick, and $\mathcal L_O$ generates the Ornstein–Uhlenbeck (thermostat) relaxation. The exact time-$\Delta t$ propagator is $e^{\Delta t\,\mathcal L}$, which we cannot evaluate directly — but each of $e^{t\mathcal L_A}$, $e^{t\mathcal L_B}$, $e^{t\mathcal L_O}$ *can* be solved in closed form individually. A symmetric (Strang) composition gives a second-order accurate approximation to the full propagator:
+$\mathcal L_A$ generates free drift, $\mathcal L_B$ generates the conservative force kick, and $\mathcal L_O$ generates the Ornstein–Uhlenbeck (thermostat) relaxation. The exact time-$\Delta t$ propagator is $e^{\Delta t\mathcal L}$, which we cannot evaluate directly — but each of $e^{t\mathcal L_A}$, $e^{t\mathcal L_B}$, $e^{t\mathcal L_O}$ *can* be solved in closed form individually. A symmetric (Strang) composition gives a second-order accurate approximation to the full propagator:
 
 $$
-e^{\Delta t\,\mathcal L} \;\approx\; e^{\frac{\Delta t}{2}\mathcal L_B}\;e^{\frac{\Delta t}{2}\mathcal L_A}\;e^{\Delta t\,\mathcal L_O}\;e^{\frac{\Delta t}{2}\mathcal L_A}\;e^{\frac{\Delta t}{2}\mathcal L_B} \;+\; O(\Delta t^3)
+e^{\Delta t\mathcal L} \approx e^{\frac{\Delta t}{2}\mathcal L_B} \circ e^{\frac{\Delta t}{2}\mathcal L_A} \circ e^{\Delta t\mathcal L_O} \circ e^{\frac{\Delta t}{2}\mathcal L_A} \circ e^{\frac{\Delta t}{2}\mathcal L_B} + O(\Delta t^3)
 $$
 
 Reading the exponentials right-to-left as the order of application gives exactly the **B–A–O–A–B** sequence. The $O(\Delta t^3)$ local error (hence global weak order 2) is a standard consequence of the Baker–Campbell–Hausdorff expansion for a symmetric (palindromic) Strang splitting.
@@ -75,31 +75,31 @@ Reading the exponentials right-to-left as the order of application gives exactly
 
 ### A — drift (exact)
 
-With $p$ held fixed, $\dot q = p/m$ integrates trivially:
+With $p$ held fixed, $\dot{q} = p/m$ integrates trivially:
 
 $$
-A_{h}:\quad q \;\leftarrow\; q + h\,\frac{p}{m}\,, \qquad p \text{ unchanged}
+A_{h}:\quad q \leftarrow q + h\frac{p}{m}, \qquad p \text{ unchanged}
 $$
 
 ### B — kick (exact)
 
-With $q$ held fixed, $\dot p = -\nabla U(q)$ integrates trivially:
+With $q$ held fixed, $\dot{p} = -\nabla U(q)$ integrates trivially:
 
 $$
-B_{h}:\quad p \;\leftarrow\; p - h\,\nabla U(q)\,, \qquad q \text{ unchanged}
+B_{h}:\quad p \leftarrow p - h\nabla U(q), \qquad q \text{ unchanged}
 $$
 
 A and B are each *shears* in phase space — linear, volume- and area-preserving maps. Composed together (without O) they reduce to the familiar **velocity Verlet** integrator, the workhorse symplectic method for pure Hamiltonian dynamics.
 
 ### O — Ornstein–Uhlenbeck thermostat (exact)
 
-Holding $q$ fixed, the momentum obeys a linear SDE, $dp = -\gamma p\,dt + \sqrt{2\gamma m k_BT}\,dW_t$, whose exact solution over an interval of length $h$ is known in closed form:
+Holding $q$ fixed, the momentum obeys a linear SDE, $dp = -\gamma p dt + \sqrt{2\gamma m k_BT} dW_t$, whose exact solution over an interval of length $h$ is known in closed form:
 
 $$
-O_h:\quad p \;\leftarrow\; c_1\,p \;+\; c_2\, R\,,
+O_h:\quad p \leftarrow c_1 p + c_2 R,
 \qquad
-c_1 = e^{-\gamma h}\,,\quad
-c_2 = \sqrt{m k_BT\left(1-e^{-2\gamma h}\right)}\,,\quad
+c_1 = e^{-\gamma h},\quad
+c_2 = \sqrt{m k_BT\left(1-e^{-2\gamma h}\right)},\quad
 R\sim\mathcal N(0,1)
 $$
 
@@ -110,17 +110,25 @@ This is not an approximation — it is the *exact* transition kernel of the OU p
 One BAOAB step of size $\Delta t$ composes the three exact sub-flows symmetrically around the stochastic step:
 
 $$
-\Phi_{\Delta t}^{\text{BAOAB}} \;=\; B_{\Delta t/2}\circ A_{\Delta t/2}\circ O_{\Delta t}\circ A_{\Delta t/2}\circ B_{\Delta t/2}
+\Phi_{\Delta t}^{\text{BAOAB}} = B_{\Delta t/2}\circ A_{\Delta t/2}\circ O_{\Delta t}\circ A_{\Delta t/2}\circ B_{\Delta t/2}
 $$
 
 ```mermaid
 flowchart LR
-    S0(["state (q, p) at time t"]) --> B1["B-step (half kick)<br/>p -= (dt/2) * grad U(q)"]
-    B1 --> A1["A-step (half drift)<br/>q += (dt/2) * p/m"]
-    A1 --> O1["O-step (exact OU relax + noise)<br/>p = c1*p + c2*R"]
-    O1 --> A2["A-step (half drift)<br/>q += (dt/2) * p/m"]
-    A2 --> B2["B-step (half kick)<br/>p -= (dt/2) * grad U(q)"]
-    B2 --> S1(["state (q, p) at time t+dt"])
+    S0("state (q, p) at time t")
+    B1["B step (half kick)<br>p decreases by (dt/2) times grad U(q)"]
+    A1["A step (half drift)<br>q increases by (dt/2) times p/m"]
+    O1["O step (exact OU relax plus noise)<br>p becomes c1 times p, plus c2 times R"]
+    A2["A step (half drift)<br>q increases by (dt/2) times p/m"]
+    B2["B step (half kick)<br>p decreases by (dt/2) times grad U(q)"]
+    S1("state (q, p) at time t plus dt")
+
+    S0 --> B1
+    B1 --> A1
+    A1 --> O1
+    O1 --> A2
+    A2 --> B2
+    B2 --> S1
 
     style B1 fill:#dcebf7,stroke:#1b6ca8,color:#111
     style B2 fill:#dcebf7,stroke:#1b6ca8,color:#111
@@ -135,24 +143,29 @@ Notice the sequence is a **palindrome**: reading the five sub-steps backward (B,
 
 - **A and B are symplectic.** Each is the exact flow map of a (partial) Hamiltonian vector field, so each exactly preserves the symplectic 2-form $dq\wedge dp$ and phase-space volume. Their composition $A\circ B$ (velocity Verlet) is therefore also exactly symplectic — this is why plain Hamiltonian MD is so remarkably stable over long trajectories even at moderate step size.
 - **O is not symplectic** — it is dissipative (contracts momentum toward zero) and stochastic (injects noise). But because it is solved *exactly*, it introduces no local truncation error of its own; what it does introduce is *non-commutativity* with A and B, which is the actual source of BAOAB's discretization error.
-- **BAOAB is "quasi-symplectic."** All approximation error is concentrated in the mismatch between $e^{\Delta t(\mathcal L_A+\mathcal L_B+\mathcal L_O)}$ and the split composition — not in any individual sub-step. This is the operator-splitting philosophy in one sentence: *push all the error into the composition, none into the pieces.*
+- **BAOAB is "quasi-symplectic."** All approximation error is concentrated in the mismatch between the exact propagator $e^{\Delta t\mathcal L}$ (§3) and the split composition — not in any individual sub-step. This is the operator-splitting philosophy in one sentence: *push all the error into the composition, none into the pieces.*
 - **Time-reversibility.** Because the B–A–O–A–B sequence is a palindrome, BAOAB is (in a stochastic sense) reversible: running the scheme backward in time with the noise realizations appropriately reflected recovers the same class of dynamics. This underlies its correct sampling of the stationary distribution even at finite $\Delta t$.
 
 ## 7. Convergence Order and the BAOAB "Superconvergence" Result
 
 Two different notions of accuracy matter for a stochastic integrator:
 
-- **Weak order** — accuracy of *averages* / moments / observables computed over many trajectories. BAOAB is weak order 2: for smooth observables $f(q,p)$, $\big|\mathbb E[f(q_n,p_n)] - \mathbb E[f(q(t_n),p(t_n))]\big| = O(\Delta t^2)$.
+- **Weak order** — accuracy of *averages* / moments / observables computed over many trajectories. BAOAB is weak order 2: for a smooth observable $f(q,p)$ evaluated after $n$ steps against its exact continuous-time counterpart at the matching time,
+
+  $$
+  \big|\mathbb E[f(q_n,p_n)] - \mathbb E[f(q(t_n),p(t_n))]\big| = O(\Delta t^2).
+  $$
+
 - **Strong (pathwise) order** — accuracy of individual trajectories against the same Brownian path. Generic explicit SDE integrators (e.g. Euler–Maruyama) are strong order $\tfrac12$. BAOAB does notably better — because each of A, B, O is solved *exactly*, all its discretization error is a pure composition/commutator effect, which behaves better in the mean-square sense than an integrator that also approximates each sub-flow.
 
-The result that made BAOAB the standard choice, however, is more specific. Leimkuhler & Matthews (2013) showed that **for a linear force (harmonic potential), BAOAB samples the exact configurational marginal $\pi(q)$ at *any* step size within the stability limit** — the bias in $\langle q^2\rangle$ is exactly zero, not just $O(\Delta t^2)$-small. The momentum marginal $\pi(p)$ still carries the generic $O(\Delta t^2)$ bias. In other words, BAOAB's error budget is *asymmetric*: it spends essentially all of its discretization error on the kinetic/momentum statistics and almost none on the configurational/structural statistics — which are usually the ones that matter for sampling and ensemble-averaged quantities. §8 verifies this numerically.
+The result that made BAOAB the standard choice, however, is more specific. Leimkuhler & Matthews (2013) showed that for a linear force (harmonic potential), BAOAB samples the exact configurational marginal $\pi(q)$ at any step size within the stability limit — the bias in $\langle q^2\rangle$ is **exactly zero**, not just $O(\Delta t^2)$-small. The momentum marginal $\pi(p)$ still carries the generic $O(\Delta t^2)$ bias. In other words, BAOAB's error budget is *asymmetric*: it spends essentially all of its discretization error on the kinetic/momentum statistics and almost none on the configurational/structural statistics — which are usually the ones that matter for sampling and ensemble-averaged quantities. §8 verifies this numerically.
 
 ## 8. Benchmark: The Harmonic Oscillator
 
 To make the abstract claims of §7 concrete, consider the simplest nontrivial test case: $U(q) = \tfrac12 k q^2$, so $\nabla U(q) = kq$ is linear. Set $k=m=\gamma=k_BT=1$ throughout. The exact stationary distribution is a product of independent Gaussians,
 
 $$
-q \sim \mathcal N\!\left(0,\tfrac{k_BT}{k}\right), \qquad p \sim \mathcal N(0, mk_BT)
+q \sim \mathcal N\left(0,\tfrac{k_BT}{k}\right), \qquad p \sim \mathcal N(0, mk_BT)
 $$
 
 so both the configurational ("temperature" inferred from $\langle q^2\rangle$) and kinetic ("temperature" inferred from $\langle p^2\rangle$) estimators should equal $1.0$ exactly if sampling were perfect.
@@ -164,7 +177,7 @@ so both the configurational ("temperature" inferred from $\langle q^2\rangle$) a
 Each curve sweeps $\Delta t$ from very small up to near the stability boundary ($\Delta t \lesssim 2/\sqrt{k/m}=2$). The left panel is the configurational-temperature error, the right panel the kinetic-temperature error.
 
 - **BAOAB's configurational error is flat at zero across the entire range** — including $\Delta t = 1.8$, i.e. 90% of the way to the stability limit. This is the harmonic-oscillator special case of the exact-sampling result from §7.
-- **BAOAB's kinetic error grows with $\Delta t$** but stays bounded and comparatively small (roughly $-19\%$ at the largest step tested).
+- **BAOAB's kinetic error grows** with increasing $\Delta t$ but stays bounded and comparatively small (roughly $-19\%$ at the largest step tested).
 - **ABOBA shares BAOAB's exact configurational sampling** (also a palindromic splitting), but its kinetic-temperature error grows much faster and diverges as $\Delta t$ approaches the stability boundary — a well-known empirical distinction between the two orderings.
 - **Euler–Maruyama has no such structure**: both errors grow immediately and the scheme is numerically divergent by $\Delta t \approx 1.0$ in this configuration (off the chart), a direct illustration of why naïve discretization is not a viable default.
 
@@ -186,19 +199,26 @@ BAOAB is one of several ways to Strang-split the same three operators. All palin
 
 ```mermaid
 flowchart TD
-    L["Langevin generator<br/>L = LA + LB + LO"] --> Split["Trotter / Strang splitting"]
-    Split --> BAOAB["BAOAB : B A O A B<br/>smallest kinetic-temperature error<br/>(this document's focus)"]
-    Split --> ABOBA["ABOBA : A B O B A<br/>exact config. sampling (harmonic case)<br/>larger kinetic error at large dt"]
-    Split --> OBABO["OBABO : O B A B O<br/>thermostat applied first/last<br/>favored for strong friction"]
-    Split --> EM["No splitting: Euler-Maruyama<br/>weak order 1, worst stability"]
+    L["Langevin generator<br>L equals LA plus LB plus LO"]
+    Split["Trotter / Strang splitting"]
+    BAOAB["BAOAB : B A O A B<br>smallest kinetic temperature error<br>(this document's focus)"]
+    ABOBA["ABOBA : A B O B A<br>exact config. sampling (harmonic case)<br>larger kinetic error at large dt"]
+    OBABO["OBABO : O B A B O<br>thermostat applied first or last<br>favored for strong friction"]
+    EM["No splitting: Euler Maruyama<br>weak order 1, worst stability"]
+
+    L --> Split
+    Split --> BAOAB
+    Split --> ABOBA
+    Split --> OBABO
+    Split --> EM
 ```
 
 | Scheme | Palindrome about | Configurational bias (harmonic) | Kinetic bias (general) | Typical use case |
 |---|---|---|---|---|
 | **BAOAB** | O | exact (0) | smallest among splittings | general-purpose default |
-| ABOBA | B | exact (0) | larger, grows faster with $\Delta t$ | force-dominated / short-range potentials |
-| OBABO | A | $O(\Delta t^2)$ | moderate | strongly damped / high-friction regimes |
-| Euler–Maruyama | — | $O(\Delta t)$ | $O(\Delta t)$ | pedagogical baseline only |
+| ABOBA | B | exact (0) | larger, grows faster with Δt | force-dominated / short-range potentials |
+| OBABO | A | O(Δt²) | moderate | strongly damped / high-friction regimes |
+| Euler–Maruyama | — | O(Δt) | O(Δt) | pedagogical baseline only |
 
 The practical takeaway from three decades of MD integrator research (see §13) is unambiguous: **if you only implement one Langevin splitting scheme, implement BAOAB.**
 
@@ -250,9 +270,14 @@ The Verlet → BAOAB transition under active investigation in the Fock-PARFLM li
 
 ```mermaid
 flowchart LR
-    Verlet["Velocity Verlet<br/>pure Hamiltonian: A - B - A<br/>(deterministic, symplectic)"] -->|"add OU thermostat"| BAOABgen["BAOAB<br/>B - A - O - A - B<br/>(exact config. sampling + tunable exploration)"]
-    BAOABgen -->|"replace analytic A-step<br/>with a learned closed-form flow"| CfCgen["CfC-augmented BAOAB<br/>B - CfC(A) - O - CfC(A) - B"]
-    CfCgen --> Out["latent / token trajectory<br/>with a physically interpretable<br/>temperature knob"]
+    Verlet["Velocity Verlet<br>pure Hamiltonian: A - B - A<br>(deterministic, symplectic)"]
+    BAOABgen["BAOAB<br>B - A - O - A - B<br>(exact config. sampling + tunable exploration)"]
+    CfCgen["CfC augmented BAOAB<br>B - CfC(A) - O - CfC(A) - B"]
+    Out["latent / token trajectory<br>with a physically interpretable<br>temperature knob"]
+
+    Verlet -->|add OU thermostat| BAOABgen
+    BAOABgen -->|replace analytic A step with a learned closed form flow| CfCgen
+    CfCgen --> Out
 ```
 
   This is a natural hypothesis to test empirically rather than a settled result: the open question is whether a CfC-parameterized A-step preserves enough of the *exactness* that makes the O-step's thermostat effect clean in the linear case (§7–8), or whether it reintroduces enough approximation error into the "solvable" half of the splitting that the configurational-sampling guarantee degrades. The harmonic-oscillator benchmark in §8 is a reasonable diagnostic to reuse here: if a CfC-augmented A-step is substituted in and the resulting configurational statistic drifts with $\Delta t$ in a way the exact-linear A-step does not, that is a direct, measurable signature of how much "splitting exactness" the learned flow is giving up.
@@ -261,18 +286,18 @@ flowchart LR
 
 | Symbol | Meaning |
 |---|---|
-| $q$ | position (generalized coordinate) |
-| $p$ | momentum, $p = m\dot q$ |
-| $m$ | mass |
-| $U(q)$ | potential energy |
-| $\nabla U(q)$ | conservative force magnitude (force $= -\nabla U(q)$) |
-| $\gamma$ | friction / collision coefficient |
-| $k_B T$ | thermal energy (Boltzmann constant × temperature) |
-| $W_t$ | standard Wiener process |
-| $\Delta t$ | integrator step size |
-| $R$ | i.i.d. standard normal draw, $R \sim \mathcal N(0,1)$ |
-| $\mathcal L_A, \mathcal L_B, \mathcal L_O$ | generators of the drift, kick, and OU sub-flows |
-| $\pi(q,p)$ | Boltzmann stationary distribution |
+| `q` | position (generalized coordinate) |
+| `p` | momentum, `p = m dq/dt` |
+| `m` | mass |
+| `U(q)` | potential energy |
+| `∇U(q)` | conservative force magnitude, force is `-∇U(q)` |
+| `γ` | friction / collision coefficient |
+| `k_B T` | thermal energy (Boltzmann constant × temperature) |
+| `W_t` | standard Wiener process |
+| `Δt` | integrator step size |
+| `R` | i.i.d. standard normal draw, `R ~ N(0,1)` |
+| `L_A, L_B, L_O` | generators of the drift, kick, and OU sub-flows |
+| `π(q,p)` | Boltzmann stationary distribution |
 
 ## 13. References
 
