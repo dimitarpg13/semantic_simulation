@@ -34,7 +34,7 @@ For a particle of mass $m$ moving in potential $U(q)$, coupled to a heat bath at
 
 $$
 \begin{aligned}
-dq &= \frac{p}{m} dt \\[4pt]
+dq &= \frac{p}{m} dt \\\\
 dp &= -\nabla U(q) dt - \gamma p dt + \sqrt{2\gamma m k_BT} dW_t
 \end{aligned}
 $$
