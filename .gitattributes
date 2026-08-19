@@ -55,3 +55,4 @@ docs/fock-parflm/images/fock_three_causal_leaks.png filter=lfs diff=lfs merge=lf
 docs/fock-parflm/images/fock_v21_register_lifecycle.png filter=lfs diff=lfs merge=lfs -text
 literature/books/Quantum_Models_of_Cognition_and_Decision.pdf filter=lfs diff=lfs merge=lfs -text
 literature/articles/Geodesic_flows/Manifold-augmented_Eikonal_Equations-Geodesic_Distances_and_Flows_on_Differentiable_Manifolds_Kelshaw_2023.pdf filter=lfs diff=lfs merge=lfs -text
+literature/articles/deep_learning/Why_does_deep_and_cheap_learning_work_so_well_Lin_Tegmark_2017.pdf filter=lfs diff=lfs merge=lfs -text
