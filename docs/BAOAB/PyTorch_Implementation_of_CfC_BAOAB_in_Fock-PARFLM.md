@@ -86,11 +86,11 @@ tested without constructing a Fock stack.
 
 ```mermaid
 flowchart TB
-    cfc["cfc baoab.py<br>sinc psi cfc substep ou step"]
-    aniso["model aniso gaussian vtheta.py<br>harmonic terms analytical grad"]
-    multixi["model parf multixi.py<br>layer forces, layer step langevin"]
-    fock["model fock parf multixi.py<br>fock layer step, stack forward"]
-    tests["test cfc baoab.py"]
+    cfc["cfc&#95;baoab.py<br>sinc psi cfc&#95;substep ou&#95;step"]
+    aniso["model&#95;aniso&#95;gaussian&#95;vtheta.py<br>harmonic&#95;terms analytical&#95;grad"]
+    multixi["model&#95;parf&#95;multixi.py<br>&#95;layer&#95;forces, &#95;layer&#95;step&#95;langevin"]
+    fock["model&#95;fock&#95;parf&#95;multixi.py<br>&#95;fock&#95;layer&#95;step, &#95;stack&#95;forward"]
+    tests["test&#95;cfc&#95;baoab.py"]
     nb["colab d384 OWT notebook"]
 
     cfc --> multixi
@@ -529,18 +529,18 @@ thermostat effect and does not apply at $T = 0$.
 
 ```mermaid
 flowchart TB
-    h["h and h prev"]
-    dec["decode velocity"]
-    xi["xi module"]
-    comps["context components"]
-    harm["harmonic terms at h"]
-    A1["cfc substep dt/2"]
-    force["layer forces at h mid"]
-    kick["B kick: f minus f harm"]
-    O["ou step"]
-    A2["cfc substep dt/2"]
-    enc["encode velocity"]
-    out["h new, h prev out"]
+    h["h, h&#95;prev"]
+    dec["decode&#95;velocity"]
+    xi["xi&#95;module"]
+    comps["context&#95;components"]
+    harm["harmonic&#95;terms at h"]
+    A1["cfc&#95;substep dt/2"]
+    force["&#95;layer&#95;forces at h&#95;mid"]
+    kick["B kick: f minus f&#95;harm"]
+    O["ou&#95;step"]
+    A2["cfc&#95;substep dt/2"]
+    enc["encode&#95;velocity"]
+    out["h&#95;new, h&#95;prev&#95;out"]
 
     h --> dec
     h --> xi
