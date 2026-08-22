@@ -212,10 +212,10 @@ $|\lambda| \gt 1$ and the other is its reciprocal. Equivalently,
 the companion matrix
 
 $$
-\begin{pmatrix} h_{n+1} \\ h_n \end{pmatrix}
+\begin{pmatrix} h_{n+1} \cr h_n \end{pmatrix}
 =
-\begin{pmatrix} 2-\theta & -1 \\ 1 & 0 \end{pmatrix}
-\begin{pmatrix} h_n \\ h_{n-1} \end{pmatrix}
+\begin{pmatrix} 2-\theta & -1 \cr 1 & 0 \end{pmatrix}
+\begin{pmatrix} h_n \cr h_{n-1} \end{pmatrix}
 $$
 
 has determinant $1$ and is stable if and only if the absolute
@@ -261,13 +261,10 @@ $\Delta t = 1$ eventually crosses $2$.
 The exact harmonic flow that CfC uses instead,
 
 $$
-\begin{pmatrix} h(t+\Delta t) - \mu \\ v(t+\Delta t) \end{pmatrix}
+\begin{pmatrix} h(t+\Delta t) - \mu \cr v(t+\Delta t) \end{pmatrix}
 =
-\begin{pmatrix}
-\cos(\omega\Delta t) & \omega^{-1}\sin(\omega\Delta t) \\
--\omega\sin(\omega\Delta t) & \cos(\omega\Delta t)
-\end{pmatrix}
-\begin{pmatrix} h - \mu \\ v \end{pmatrix},
+\begin{pmatrix} \cos(\omega\Delta t) & \omega^{-1}\sin(\omega\Delta t) \cr -\omega\sin(\omega\Delta t) & \cos(\omega\Delta t) \end{pmatrix}
+\begin{pmatrix} h - \mu \cr v \end{pmatrix},
 $$
 
 has determinant $1$ and eigenvalues $e^{\pm i\omega\Delta t}$ for
