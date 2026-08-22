@@ -37,6 +37,7 @@ autograd is kept honest, and which primitives do the work.
 2. [File map](#2-file-map)
 3. [The equation being integrated](#3-the-equation-being-integrated)
 4. [Why Verlet is the wrong default](#4-why-verlet-is-the-wrong-default)
+    - [The Verlet stability bound](#41-the-verlet-stability-bound)
 5. [The integrator switch](#5-the-integrator-switch)
 6. [The pure-maths module](#6-the-pure-maths-module)
 7. [Velocity encoding](#7-velocity-encoding)
@@ -159,7 +160,122 @@ $$
 
 When a well sharpens during training the layer step crosses that
 bound and the state amplifies geometrically down the remaining
-layers. From outside that is a gradient spike.
+layers. From outside that is a gradient spike. The next subsection
+is the unit-circle argument that produces the factor of $2$.
+
+### 4.1 The Verlet stability bound
+
+Near a well of curvature $K$ and mass $\mathfrak{m}$ the force is
+locally linear,
+
+$$
+\mathfrak{m}\ddot{h} = -K(h - \mu).
+$$
+
+Shift coordinates so the centre sits at the origin, and write
+$\omega = \sqrt{K/\mathfrak{m}}$. The continuous equation is then
+$\ddot{h} = -\omega^{2} h$. Its exact flow is a rotation in the
+$(h, v)$ plane and never grows.
+
+The production Verlet step at $\gamma = 0$ is
+
+$$
+h_{n+1} = 2h_n - h_{n-1} + \frac{(\Delta t)^{2}}{\mathfrak{m}} f_n, \qquad f_n = -K h_n,
+$$
+
+which is the two-step recurrence
+
+$$
+h_{n+1} = \bigl(2 - (\omega\Delta t)^{2}\bigr) h_n - h_{n-1}.
+$$
+
+(The damped form used in training,
+
+$$
+h_{n+1} = h_n + \frac{h_n - h_{n-1}}{1 + \gamma\Delta t} + \frac{(\Delta t)^{2} f_n}{\mathfrak{m}(1 + \gamma\Delta t)},
+$$
+
+reduces to the undamped recurrence at $\gamma = 0$. Damping only
+moves the bound slightly; the sharp statement is for the
+conservative step.)
+
+Seek geometric modes $h_n = \lambda^n$. The characteristic
+equation is
+
+$$
+\lambda^{2} - (2 - \theta)\lambda + 1 = 0, \qquad \theta := (\omega\Delta t)^{2}.
+$$
+
+The product of the roots is $1$, so the map is area-preserving:
+either both roots lie on the unit circle, or one has
+$|\lambda| \gt 1$ and the other is its reciprocal. Equivalently,
+the companion matrix
+
+$$
+\begin{pmatrix} h_{n+1} \\ h_n \end{pmatrix}
+=
+\begin{pmatrix} 2-\theta & -1 \\ 1 & 0 \end{pmatrix}
+\begin{pmatrix} h_n \\ h_{n-1} \end{pmatrix}
+$$
+
+has determinant $1$ and is stable if and only if the absolute
+value of its trace is at most $2$. The roots are
+
+$$
+\lambda_{\pm} = \frac{2 - \theta \pm \sqrt{(2-\theta)^{2} - 4}}{2}.
+$$
+
+They are complex conjugates of modulus $1$ precisely when the
+discriminant is non-positive,
+
+$$
+|2 - \theta| \le 2 \qquad\Longleftrightarrow\qquad 0 \le \theta \le 4 \qquad\Longleftrightarrow\qquad \omega\Delta t \le 2.
+$$
+
+Past the bound ($\omega\Delta t \gt 2$, hence $\theta \gt 4$) both
+roots are real and
+
+$$
+\lambda_{-} = \frac{2 - \theta - \sqrt{\theta(\theta-4)}}{2} \lt -1.
+$$
+
+Each layer therefore multiplies that mode by a factor greater
+than $1$ in magnitude. Across $L = 16$ layers the state — and
+then the gradient through `create_graph` — grows like
+$|\lambda_{-}|^{L}$. That is the geometric cascade that reads as
+a gradient spike from outside the stack.
+
+The same inequality is a step-size restriction on the well
+curvature,
+
+$$
+\Delta t \lt 2\sqrt{\frac{\mathfrak{m}}{K}} = \frac{2}{\omega}.
+$$
+
+The local period is $T = 2\pi/\omega$, so the bound is
+$\Delta t \lt T/\pi$: Verlet is stable only while the layer step
+is shorter than about a third of an oscillation. As training
+sharpens a well, $K$ rises, $\omega$ rises, and a fixed
+$\Delta t = 1$ eventually crosses $2$.
+
+The exact harmonic flow that CfC uses instead,
+
+$$
+\begin{pmatrix} h(t+\Delta t) - \mu \\ v(t+\Delta t) \end{pmatrix}
+=
+\begin{pmatrix}
+\cos(\omega\Delta t) & \omega^{-1}\sin(\omega\Delta t) \\
+-\omega\sin(\omega\Delta t) & \cos(\omega\Delta t)
+\end{pmatrix}
+\begin{pmatrix} h - \mu \\ v \end{pmatrix},
+$$
+
+has determinant $1$ and eigenvalues $e^{\pm i\omega\Delta t}$ for
+every $\omega\Delta t$. A rotation cannot amplify, which is why
+the closed-form A-substep is unconditionally stable in $K$
+([Blended CfC, §5.1](https://github.com/dimitarpg13/semsimula-paper/blob/main/companion_notes/Blended_CfC_BAOAB_Deep_Dive.md)).
+This is what `test_cfc_stiffness_immunity` certifies, and what
+Figure 1 shows.
 
 **Second-order autograd.** $V\_\theta$ sits inside
 `autograd.grad(U, h, create_graph=True)`. The force is itself a
