@@ -66,7 +66,7 @@ differentiate and cheaper to compare against Verlet:
 | --- | --- |
 | BAOAB (B at both ends) | **ABOBA**: one force evaluation per layer |
 | Blended multi-well $\Phi_{\mathrm{blend}}$ | **Diagonal** CfC of $k_{\mathrm{diag}}$, residual in the B-kick |
-| Isotropic Gaussian $V\_\theta$ | Anisotropic wells (diagonal + rank-$r$ $B_k$) |
+| Isotropic Gaussian $V\_\theta$ | Anisotropic wells (diagonal + rank - $r$ $B_k$) |
 | Active thermostat | $T = 0$ by default (exact friction, no FDT noise) |
 
 The split is constructed so that **the force field is unchanged**.
