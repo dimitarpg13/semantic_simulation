@@ -38,6 +38,8 @@ autograd is kept honest, and which primitives do the work.
 3. [The equation being integrated](#3-the-equation-being-integrated)
 4. [Why Verlet is the wrong default](#4-why-verlet-is-the-wrong-default)
     - [The Verlet stability bound](#41-the-verlet-stability-bound)
+    - [Why this bound was not checked before the OWT runs](#42-why-this-bound-was-not-checked-before-the-owt-runs)
+    - [Why not a different explicit symplectic integrator?](#43-why-not-a-different-explicit-symplectic-integrator)
 5. [The integrator switch](#5-the-integrator-switch)
 6. [The pure-maths module](#6-the-pure-maths-module)
 7. [Velocity encoding](#7-velocity-encoding)
@@ -289,6 +291,155 @@ twice.
 stiffness, both integrators stay on the orbit. Right:
 $\omega\Delta t = 100$. Explicit Verlet overflows; CfC remains a
 bounded rotation. This is `test_cfc_stiffness_immunity`.
+
+### 4.2 Why this bound was not checked before the OWT runs
+
+It is fair to ask why $\omega\Delta t \lt 2$ was not enforced, or
+even evaluated, before Verlet was used as the production integrator
+across every isotropic-Gaussian and Aniso-Gaussian $+$ Fock-Reg run
+to date. Two things are true at once here, and neither is a good
+excuse on its own.
+
+**The bound itself is not new.** $\omega\Delta t \le 2$ is the
+textbook stability limit of velocity-Verlet/leapfrog on a harmonic
+oscillator — the same criterion that governs time-step choice in
+every symplectic-integrator and molecular-dynamics setting (see e.g.
+Hairer, Lubich & Wanner, *Geometric Numerical Integration*, or any
+MD leapfrog treatment). Nothing in §4.1 required this project's data
+to derive; it could have been written down before the first Verlet
+run of Fock-PARFLM was ever launched.
+
+**What was missing is a runtime number to compare it against.**
+$\omega = \sqrt{K/\mathfrak{m}}$ is not a static hyperparameter fixed
+at model-definition time; $K$ is the local curvature of a *learned*
+$V\_\theta$ well (the amplitude $a\_k$, the diagonal stiffness, and
+for Aniso-Gaussian the rank-$r$ factor $B\_k$), and it moves every
+optimiser step as the well sharpens to fit the corpus. A single
+pre-flight check at initialisation — with wells still broad and
+$K$ small — would have reported $\omega\Delta t \ll 2$ and looked
+completely safe, and would not have predicted the crossing that
+later happens mid-training as training itself sharpens the wells.
+The quantity that needed watching was not a config value to validate
+once; it was a distribution over (layer, token, dimension) that had
+to be monitored *continuously through training*, and no such
+instrumentation existed until `harmonic_terms()` gave $V\_\theta$ a
+closed-form way to expose $K$ (§3). Until then, every Verlet run —
+the isotropic-Gaussian d384 history, the gamma sweeps, both
+Aniso-Gaussian $+$ Fock-Reg OWT arms — was diagnosed purely from
+downstream symptoms (raw gradient-norm spikes, watchdog reload
+counts, EMA thresholds in
+[Training Instabilities](https://github.com/dimitarpg13/semsimula-paper/blob/main/companion_notes/Training_Instabilities_in_Fock-PARFLM_with_structured_V_theta.md)).
+That is monitoring the effect, not the mechanism, and it is a real
+gap in the original methodology, not a subtlety to gloss over.
+
+The gap is now closed going forward: `stiffness_report()` in the
+CfC/BAOAB notebook computes the $\omega\Delta t$ distribution
+(median, $p\_{90}$, $p\_{99}$, $p\_{99.9}$, max) over every layer,
+token and dimension from `harmonic_terms()` at any point in
+training, for **any** integrator arm — it needs `harmonic_terms()`
+and $\Delta t$, not the CfC step itself. What it cannot do is
+retroactively cover the runs made before it existed. The concrete
+way to actually close that loop, rather than leave the connection
+between §4.1 and the historical spikes as a plausible-sounding
+story, is to reload the surviving Verlet checkpoints (the
+`scaf_checkpoint_analysis.ipynb` pipeline already loads exactly
+these) at steps bracketing each logged watchdog reload and run
+`stiffness_report`-style scoring against them. If $\omega\Delta t$
+is at or past $2$ at those steps and comfortably below it in
+between, that turns the mechanism argued for above into a
+checkpoint-verified fact instead of an inference from the
+recurrence alone. That analysis has not been run yet; it is the
+natural next step to fully substantiate this section, and is
+tracked as open follow-up work rather than settled.
+
+### 4.3 Why not a different explicit symplectic integrator?
+
+A natural objection to §4.1: is $\omega\Delta t \lt 2$ a weakness of
+Verlet specifically, or would some other explicit, Euler-family,
+symplectic integrator push the bound higher and let us avoid the
+CfC rewrite? The short answer is no — the bound is close to the
+ceiling for the whole design space Verlet belongs to, not a defect
+particular to Verlet's derivation.
+
+**Symplectic (semi-implicit) Euler has the identical bound.** This is
+the other classic Euler-family symplectic scheme, one force
+evaluation per step:
+
+$$
+v_{n+1} = v_n - \omega^{2}\Delta t h_n, \qquad h_{n+1} = h_n + \Delta t v_{n+1}.
+$$
+
+Writing one step as $(h_{n+1}, v_{n+1})^{\top} = M(h_n, v_n)^{\top}$,
+
+$$
+M = \begin{pmatrix} 1-\omega^{2}\Delta t^{2} & \Delta t \cr -\omega^{2}\Delta t & 1 \end{pmatrix}, \qquad \det M = 1, \qquad \operatorname{tr}M = 2-\omega^{2}\Delta t^{2}.
+$$
+
+For a $2\times2$ map with $\det M = 1$, both eigenvalues sit on the
+unit circle exactly while $\lvert\operatorname{tr}M\rvert \le 2$ —
+which is $\omega\Delta t \le 2$, the same characteristic equation
+shape and the same threshold as §4.1's Verlet recurrence. That is
+not a coincidence: velocity-Verlet applied to the harmonic
+oscillator is algebraically two symplectic-Euler half-steps glued
+together, so of course the two share a bound.
+
+**Higher-order explicit symplectic composition does not raise the
+bound — it typically lowers it.** Yoshida- and Forest-Ruth-style
+integrators compose several Verlet substeps with carefully chosen
+(some negative) substep lengths to cancel the leading local-error
+term and reach fourth order. The Suzuki-Sheng theorem says any
+*symmetric* composition method of order $\ge 3$ must contain at
+least one negative substep, and a negative substep is a
+destabilising direction for a stiff linear mode. Composition raises
+the *order* of accuracy; it does not raise, and generally shrinks,
+the *stability* threshold that matters here.
+
+**This is not an accident of any particular scheme — it is what
+"explicit" means.** For a one-step method applied to the linear
+equation $\ddot h=-\omega^{2}h$, one step is
+$y_{n+1}=R(i\omega\Delta t) y_n$ for some stability function $R$.
+An **explicit** method — Verlet, symplectic Euler, any finite
+composition of them — evaluates the force a fixed number of times
+per step with no matrix inversion, so $R$ is always a *polynomial*
+in $z=i\omega\Delta t$. A polynomial is unbounded as
+$\lvert z\rvert\to\infty$ along the imaginary axis, so
+$\lvert R(i\theta)\rvert$ must exceed $1$ for some finite $\theta$
+— there is no explicit method, symplectic or not, for which that
+threshold is infinite. This is the imaginary-axis specialisation of
+the standard fact that no explicit Runge-Kutta method is A-stable
+(Dahlquist): A-stability needs $\lvert R(z)\rvert\le1$ on the entire
+closed left half-plane, and only a *rational* $R$ (implicit — a
+matrix inverse per step) can do that.
+
+**What actually removes the bound, and at what price.** Two escape
+routes exist, and CfC is deliberately the second one, not the first:
+
+- *Implicit symplectic collocation* (implicit midpoint, and its
+  higher-stage Gauss-Legendre generalisations) makes $R$ a rational
+  Padé approximant to $e^{z}$ instead of a polynomial. Implicit
+  midpoint's $R$ has $\lvert R(i\theta)\rvert = 1$ for every real
+  $\theta$ — unconditionally stable, for any $\omega\Delta t$. The
+  cost: a genuinely implicit, nonlinear equation to solve at every
+  layer step for a general (non-quadratic) $V\_\theta$, and even
+  where it converges the *phase* is wrong at large $\omega\Delta t$
+  — right energy, wrong oscillation frequency, because a Padé[1/1]
+  approximant to $e^{i\theta}$ matches modulus exactly but not
+  argument.
+- *Exact propagation of the locally-frozen linear part* — what
+  `cfc_substep` does (§6.2) — replaces the rational
+  *approximation* to $e^{i\theta}$ with the true $\cos/\mathrm{sinc}$
+  solution. This is unconditionally stable for the same reason
+  (§4.1's rotation-matrix argument) **and** phase-exact in the
+  frozen-coefficient limit, with no implicit solve, because the
+  local model is linear by construction — only $K$ itself changes
+  from step to step, not the equation being solved within a step.
+
+CfC is therefore not one adequate fix picked among several
+comparably good alternatives to Verlet's bound; within
+"explicit, Euler-family, one global $\Delta t$" the $2$ in §4.1 is
+close to the best achievable, and the only two ways past it both
+require giving up explicitness — CfC gives it up in the strictly
+cheaper and more accurate of the two available ways.
 
 ---
 
